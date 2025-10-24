@@ -1,18 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router';
-// 我们稍后会创建这个 EventDetail.vue 文件
+import EventList from '../views/EventList.vue';
 import EventDetail from '../views/EventDetail.vue';
+// 1. 引入新组件
+import PublishEvent from '../views/PublishEvent.vue'; 
 
 const routes = [
   {
     path: '/',
-    // 暂时重定向到我们的详情页进行测试
-    redirect: '/event/1'
+    name: 'EventList',
+    component: EventList
   },
   {
-    // :id 是一个动态参数，它可以匹配 /event/1, /event/2 等
     path: '/event/:id',
     name: 'EventDetail',
     component: EventDetail
+  },
+  // 2. 添加新路由
+  {
+    path: '/publish',
+    name: 'PublishEvent',
+    component: PublishEvent
   }
 ];
 
