@@ -1,17 +1,17 @@
 <template>
   <div class="event-container">
-    <div v-if="loading" class="loading-message">
-      正在加载活动详情...
-    </div>
-
-    <div v-else-if="error" class="error-message">
-      加载活动失败: {{ error.message }}
-    </div>
+    <div v-if="loading" class="loading-message">正在加载活动详情...</div>
+    <div v-else-if="error" class="error-message">加载活动失败: {{ error.message }}</div>
 
     <div v-else-if="event" class="event-card">
       <div class="event-content">
-        <h1>{{ event.title }}</h1>
-        <p class="status">状态: {{ event.status }}</p>
+        <div class="header-with-status">
+          <h1>{{ event.title }}</h1>
+          <span class="status-badge" :class="getStatusClass(event.status)">{{ event.status }}</span>
+        </div>
+        <p v-if="event.gradeRestriction" class="grade-restriction">
+          <strong>年级限制:</strong> {{ event.gradeRestriction.split(',').join('、') }}
+        </p>
         <p class="location"><strong>地点:</strong> {{ event.location }}</p>
         <p class="time"><strong>时间:</strong> {{ formatDate(event.startTime) }} - {{ formatDate(event.endTime) }}</p>
         <p class="deadline"><strong>报名截止:</strong> {{ formatDate(event.registrationDeadline) }}</p>
@@ -31,10 +31,10 @@
       <div class="registration-section">
         <h2>立即报名</h2>
         
-        <form v-if="registrationStep === 'enterName'" @submit.prevent="handleNameLookup">
+        <form v-if="registrationStep === 'enterPhone'" @submit.prevent="handlePhoneLookup">
           <div class="form-group">
-            <label for="name-lookup">请输入您的姓名</label>
-            <input id="name-lookup" v-model="form.name" type="text" placeholder="确认后将查找您过往的报名信息" required>
+            <label for="phone-lookup">请输入您的手机号</label>
+            <input id="phone-lookup" v-model="form.phone" type="tel" placeholder="确认后将查找您过往的报名信息" required>
           </div>
           <p v-if="lookupError" class="error-message">{{ lookupError }}</p>
           <button type="submit" class="register-button" :disabled="isLookupDisabled">
@@ -43,15 +43,23 @@
         </form>
 
         <div v-if="registrationStep === 'fillDetails'">
-          <p class="welcome-back">欢迎您，<strong>{{ form.name }}</strong>！请确认或修改以下信息：</p>
+          <p class="welcome-back">请确认或修改以下信息：</p>
           <form @submit.prevent="handleRegistration">
             <div class="form-group">
-              <label for="phone">手机号</label>
-              <input id="phone" v-model="form.phone" type="tel" required>
+              <label for="name">姓名</label>
+              <input id="name" v-model="form.name" type="text" required>
             </div>
             <div class="form-group">
               <label for="className">年级班级</label>
-              <input id="className" v-model="form.className" type="text" required>
+              <input 
+                id="className" 
+                v-model="form.className" 
+                type="text" 
+                required
+                pattern="G\d+C\d+"
+                title="格式必须为'G+年级号+C+班级号'，例如：G1C1 或 G10C5"
+                placeholder="例如: G1C1 (一年级1班)">
+              <small class="form-hint">格式必须为 G+年级号+C+班级号</small>
             </div>
             <div class="form-group">
               <label for="qq">QQ号</label>
@@ -60,7 +68,7 @@
             <div class="form-group">
               <label for="wechat">微信号</label>
               <input id="wechat" v-model="form.wechat" type="text">
-              <small>QQ和微信至少填一项</small>
+              <small class="form-hint">QQ和微信至少填一项</small>
             </div>
             <p v-if="registrationError" class="error-message">{{ registrationError }}</p>
             <div class="button-group">
@@ -70,9 +78,7 @@
           </form>
         </div>
 
-        <div v-if="registrationStep === 'success'" class="success-message">
-          🎉 报名成功！期待您的参与！
-        </div>
+        <div v-if="registrationStep === 'success'" class="success-message">🎉 报名成功！期待您的参与！</div>
       </div>
     </div>
   </div>
@@ -88,7 +94,8 @@ const event = ref(null);
 const loading = ref(true);
 const error = ref(null);
 
-const registrationStep = ref('enterName');
+// --- 报名流程状态 ---
+const registrationStep = ref('enterPhone'); // 'enterPhone', 'fillDetails', 'success'
 const lookupLoading = ref(false);
 const lookupError = ref('');
 
@@ -98,12 +105,14 @@ const form = ref({
 const submitting = ref(false);
 const registrationError = ref('');
 
-const handleNameLookup = async () => {
+// --- 步骤一：根据手机号查找信息 ---
+const handlePhoneLookup = async () => {
   lookupLoading.value = true;
   lookupError.value = '';
   try {
-    const response = await apiClient.get(`/volunteers/lookup?name=${form.value.name}`);
-    form.value.phone = response.data.phone || '';
+    const response = await apiClient.get(`/volunteers/lookup?phone=${form.value.phone}`);
+    // 用查找到的数据填充表单，如果找不到则为空
+    form.value.name = response.data.name || '';
     form.value.className = response.data.className || '';
     form.value.qq = response.data.qq || '';
     form.value.wechat = response.data.wechat || '';
@@ -115,6 +124,7 @@ const handleNameLookup = async () => {
   }
 };
 
+// --- 步骤二：提交完整信息 ---
 const handleRegistration = async () => {
   if (!form.value.qq && !form.value.wechat) {
     registrationError.value = 'QQ号和微信号必须至少填写一项。';
@@ -134,48 +144,56 @@ const handleRegistration = async () => {
 };
 
 const resetStep = () => {
-  registrationStep.value = 'enterName';
-  form.value.phone = '';
+  registrationStep.value = 'enterPhone';
+  // 清空除手机号外的所有信息
+  form.value.name = '';
   form.value.className = '';
   form.value.qq = '';
   form.value.wechat = '';
 };
 
-// 【【【【【 这里是关键的修复 】】】】】
-// onMounted 钩子需要包含获取数据的完整逻辑
 onMounted(async () => {
   const eventId = route.params.id;
   try {
-    // 1. 发送 API 请求
     const response = await apiClient.get(`/events/${eventId}`);
-    // 2. 将返回的数据赋值给 event
     event.value = response.data;
   } catch (err) {
-    // 3. 如果出错，记录错误
     error.value = err;
-    console.error('获取活动详情失败:', err);
   } finally {
-    // 4. 无论成功还是失败，都将 loading 设置为 false，这样页面才能继续渲染
     loading.value = false;
   }
 });
 
-const isLookupDisabled = computed(() => !event.value || event.value.status !== '招募中' || lookupLoading.value);
+const isLookupDisabled = computed(() => {
+  if (lookupLoading.value || !event.value) return true;
+  // 只有在招募中时才能点击下一步
+  return event.value.status !== '招募中';
+});
 const isSubmitDisabled = computed(() => submitting.value);
 const buttonText = computed(() => submitting.value ? '提交中...' : '确认提交');
 
-// 添加 formatDate 函数
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return new Date(dateString).toLocaleDateString('zh-CN', options);
 };
 
+// 【【【 新增：状态徽章的辅助函数 】】】
+const getStatusClass = (status) => {
+  switch (status) {
+    case '招募中': return 'status-recruiting';
+    case '报名已满': return 'status-full';
+    case '报名已截止': return 'status-closed';
+    case '进行中': return 'status-active';
+    case '已结束': return 'status-finished';
+    default: return '';
+  }
+};
 </script>
 
 <style scoped>
-/* 样式部分可以保持不变，这里为您补全，以防万一 */
+/* (大部分样式不变) */
 .event-container { max-width: 900px; margin: 0 auto; }
-.event-card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-top: 20px; }
+.event-card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
 .event-content { padding: 24px; }
 h1 { margin-top: 0; }
 .registration-section { padding: 24px; background-color: #f8f9fa; border-top: 1px solid #e9ecef; }
@@ -191,4 +209,29 @@ h1 { margin-top: 0; }
 .button-group { display: flex; gap: 10px; margin-top: 20px; }
 .button-group .register-button, .button-group .secondary-button { width: 100%; margin-top: 0; }
 .secondary-button { background-color: #6c757d; color: white; border: none; border-radius: 8px; padding: 16px; font-size: 1.2em; cursor: pointer; }
+.form-hint { font-size: 0.8em; color: #6c757d; margin-top: 4px; }
+.grade-restriction { font-size: 0.9em; color: #495057; background-color: #e9ecef; padding: 8px 12px; border-radius: 6px; display: inline-block; }
+
+/* 【【【 新增：状态徽章和标题的样式 】】】 */
+.header-with-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap; /* 允许在小屏幕上换行 */
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+.status-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  font-size: 0.9em;
+  font-weight: bold;
+  border-radius: 999px;
+  white-space: nowrap; /* 防止文字换行 */
+}
+.status-recruiting { background-color: #dcfce7; color: #166534; }
+.status-full { background-color: #ffedd5; color: #9a3412; }
+.status-closed { background-color: #fee2e2; color: #991b1b; }
+.status-active { background-color: #dbeafe; color: #1e40af; }
+.status-finished { background-color: #e5e7eb; color: #4b5563; }
 </style>
