@@ -228,26 +228,51 @@ def delete_volunteer(volunteer_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"删除失败: {str(e)}"}), 500
+    
+@app.route('/api/events/<int:event_id>', methods=['DELETE'])
+def delete_event(event_id):
+    # 1. 根据 ID 查找活动，如果不存在则返回 404
+    event = Event.query.get_or_404(event_id)
+    
+    try:
+        # 2. 从数据库会话中删除该活动对象
+        #    由于设置了 cascade, 所有相关的 Volunteer 记录也会被一并删除
+        db.session.delete(event)
+        
+        # 3. 提交更改
+        db.session.commit()
+        
+        return jsonify({"message": "活动已成功删除"}), 200 # 200 OK
+    
+    except Exception as e:
+        db.session.rollback() # 出错时回滚
+        return jsonify({"message": f"删除活动失败: {str(e)}"}), 500
 
 # get_events 和 get_event_detail 路由无需改动，因为 to_dict() 已经处理了 status
 @app.route('/api/events', methods=['GET'])
 def get_events():
     # 【【【 修复：实现自定义排序 】】】
-    now = datetime.utcnow()
+    now = datetime.now()
 
-    # 1. 创建一个 CASE 语句，为不同的状态分配一个数字优先级 (数字越小，越靠前)
-    #    这个逻辑必须和 Event.status 属性的逻辑保持一致
+    # 【【【 核心修复：CASE 语句的判断顺序必须和 Event.status 属性的逻辑完全一致 】】】
+    # 这样才能保证排序依据和显示的状态是同步的。
+    # 优先级数字越小，越靠前。
     status_priority = case(
-        (Event.end_time < now, 5), # 已结束 -> 优先级 5 (最低)
-        (Event.start_time < now, 4), # 进行中 -> 优先级 4
+        # 1. 首先判断是否已结束
+        (Event.end_time < now, 5),                                  # 已结束 -> 优先级 5 (最低)
+        # 2. 其次判断是否进行中
+        (Event.start_time < now, 4),                                # 进行中 -> 优先级 4
+        # 3. 然后判断是否已满员
         (Event.current_volunteers >= Event.required_volunteers, 2), # 报名已满 -> 优先级 2
-        (Event.registration_deadline < now, 3), # 报名已截止 -> 优先级 3
-        else_=1 # 招募中 -> 优先级 1 (最高)
+        # 4. 再判断报名是否截止
+        (Event.registration_deadline < now, 3),                     # 报名已截止 -> 优先级 3
+        # 5. 都不是，才是招募中
+        else_=1                                                     # 招募中 -> 优先级 1 (最高)
     )
 
-    # 2. 查询时，首先根据我们自定义的优先级排序，
-    #    然后在优先级相同的情况下，按活动开始时间升序排列 (越早开始的越靠前)
-    events = Event.query.order_by(status_priority, Event.start_time.asc()).all()
+    # 查询时，首先根据我们自定义的优先级升序排列，
+    # 然后在优先级相同的情况下，按活动开始时间升序排列 (越近的活动越靠前)
+    events = Event.query.order_by(status_priority.asc(), Event.start_time.asc()).all()
     
     return jsonify([event.to_dict() for event in events])
 
