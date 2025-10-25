@@ -67,11 +67,6 @@
           <input id="registrationDeadline" v-model="form.registrationDeadline" type="datetime-local" required>
         </div>
 
-        <div class="form-group">
-          <label for="imageUrl">图片URL (选填)</label>
-          <input id="imageUrl" v-model="form.imageUrl" type="url" placeholder="https://...">
-        </div>
-
         <p v-if="submitError" class="error-message">{{ submitError }}</p>
         <button type="submit" class="submit-button" :disabled="submitting">
           {{ submitting ? '发布中...' : '确认发布' }}
@@ -111,7 +106,6 @@ const form = ref({
   leaderName: '',
   leaderContact: '',
   registrationDeadline: '',
-  imageUrl: ''
 });
 
 const submitting = ref(false);

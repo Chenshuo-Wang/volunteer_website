@@ -16,7 +16,6 @@
         class="event-card-link"
       >
         <div class="event-card">
-          <img :src="event.imageUrl || 'https://via.placeholder.com/400x200'" :alt="event.title" class="card-image">
           <div class="card-content">
             <span class="card-status">{{ event.status }}</span>
             <h2 class="card-title">{{ event.title }}</h2>
