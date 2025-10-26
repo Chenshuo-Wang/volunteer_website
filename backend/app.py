@@ -15,12 +15,21 @@ CORS(app)
 
 # --- 2. 数据库配置 ---
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'volunteer.db')
+
+# 从环境变量中读取线上数据库地址
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # 如果是在 Vercel 等线上环境
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    # 如果是在您的本地电脑，则继续使用 SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'volunteer.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
 
 # --- 3. 数据库模型重构 ---
 
