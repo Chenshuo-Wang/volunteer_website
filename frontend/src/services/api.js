@@ -1,13 +1,11 @@
 import axios from 'axios';
 
-// 创建一个 axios 实例
+// 【【【 修改这里 】】】
+// 我们将不再使用本地回退地址，而是完全依赖 Vercel 上的环境变量
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const apiClient = axios.create({
-  // 这里的 URL 就是您 Flask 后端的地址
-  baseURL: 'http://127.0.0.1:5000/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: API_BASE_URL
 });
 
-// 导出这个实例，以便在其他组件中使用
 export default apiClient;
