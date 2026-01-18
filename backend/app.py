@@ -1,29 +1,23 @@
-# backend/app.py
-
 import os
-import re # 引入正则表达式模块用于格式验证
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 from flask_migrate import Migrate
-from sqlalchemy import case
+from datetime import datetime, date
+from sqlalchemy import func, case
 
 # --- 1. 基本配置 ---
 app = Flask(__name__)
 CORS(app)
 
-# --- 2. 数据库配置 ---
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-# 从环境变量中读取线上数据库地址
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
-    # 如果是在 Vercel 等线上环境
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
-    # 如果是在您的本地电脑，则继续使用 SQLite
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'volunteer.db')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -31,266 +25,383 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# --- 3. 数据库模型重构 ---
+# ==========================================
+# 模块一：用户系统 (Student)
+# ==========================================
 
-# 【【【 新增模型：学生个人信息表 】】】
-# 这张表存储学生独一无二、可复用的信息。
-class StudentProfile(db.Model):
+class Student(db.Model):
+    __tablename__ = 'students'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    # 手机号是学生的唯一标识
-    phone = db.Column(db.String(20), nullable=False, unique=True, index=True)
-    class_name = db.Column(db.String(100), nullable=False) 
-    qq = db.Column(db.String(50), nullable=True)
-    wechat = db.Column(db.String(100), nullable=True)
-    # 定义关系：一个学生信息可以有多条报名记录
-    registrations = db.relationship('Volunteer', backref='student_profile', lazy=True, cascade="all, delete-orphan")
+    name = db.Column(db.String(50), nullable=False)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
+    
+    # 入学年份和班级号
+    enrollment_year = db.Column(db.Integer, nullable=False) 
+    class_number = db.Column(db.Integer, nullable=False)
+    
+    qq = db.Column(db.String(50))
+    wechat = db.Column(db.String(50))
+
+    # 关联关系
+    event_signups = db.relationship('EventSignup', backref='student', lazy='dynamic')
+    shift_signups = db.relationship('ShiftSignup', backref='student', lazy='dynamic')
+
+    @property
+    def total_hours(self):
+        # 1. 普通活动时长 (仅计算已结束的)
+        event_hours = db.session.query(func.sum(Event.hours_value))\
+            .join(EventSignup)\
+            .filter(EventSignup.student_id == self.id)\
+            .filter(Event.end_time < datetime.now())\
+            .scalar() or 0.0
+        
+        # 2. 周常岗位时长 (仅计算日期早于今天的)
+        shift_hours = db.session.query(func.sum(RecurringShift.hours_value))\
+            .join(ShiftSignup)\
+            .filter(ShiftSignup.student_id == self.id)\
+            .filter(ShiftSignup.date < date.today())\
+            .scalar() or 0.0
+            
+        return round(float(event_hours) + float(shift_hours), 1)
+
+    @property
+    def full_class_name(self):
+        return f"{self.enrollment_year}级{self.class_number}班"
+
+    # 【新增功能】获取该学生的所有活动历史
+    def get_history(self):
+        history_list = []
+        
+        # A. 获取普通活动记录
+        # 我们遍历该学生报名的所有 ordinary events
+        for signup in self.event_signups:
+            event_obj = signup.event
+            history_list.append({
+                "type": "event",                  # 标记类型，前端据此判断跳往哪个详情页
+                "id": event_obj.id,               # 活动ID，用于跳转链接 /event/:id
+                "title": event_obj.title,         # 左侧：显示名称
+                "hours": event_obj.hours_value,   # 右侧：显示时长
+                "date": event_obj.start_time.isoformat(), # 用于排序
+                "status": event_obj.status        # 状态 (已结束/进行中)
+            })
+
+        # B. 获取周常值日记录
+        for signup in self.shift_signups:
+            shift_obj = RecurringShift.query.get(signup.shift_id)
+            history_list.append({
+                "type": "shift",                  # 标记类型
+                "id": shift_obj.id,               # 值日岗ID (虽然值日岗通常没有详情页，但以防万一)
+                "title": f"{shift_obj.name} (周{shift_obj.day_of_week})", # 名称拼接星期
+                "hours": shift_obj.hours_value,
+                "date": signup.date.isoformat(),
+                "status": "已完成" if signup.date < date.today() else "待参加"
+            })
+        
+        # C. 按日期倒序排列 (最新的在最上面)
+        history_list.sort(key=lambda x: x['date'], reverse=True)
+        return history_list
 
     def to_dict(self):
-        return {"id": self.id, "name": self.name, "phone": self.phone, "className": self.class_name, "qq": self.qq, "wechat": self.wechat}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "phone": self.phone,
+            "enrollmentYear": self.enrollment_year,
+            "classNumber": self.class_number,
+            "fullClassName": self.full_class_name,
+            "qq": self.qq,
+            "wechat": self.wechat,
+            "totalHours": self.total_hours,
+            "history": self.get_history() # 【核心】前端现在可以直接读到这个列表
+        }
 
-# 【【【 改造模型：报名记录表 】】】
-# 这张表现在只作为 Event 和 StudentProfile 之间的关联。
-class Volunteer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    # 外键，关联到 event 表的 id 字段
-    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
-    # 外键，关联到 student_profile 表的 id 字段
-    student_profile_id = db.Column(db.Integer, db.ForeignKey('student_profile.id'), nullable=False)
-    
-    # 唯一性约束：同一个学生不能重复报名同一个活动
-    __table_args__ = (db.UniqueConstraint('student_profile_id', 'event_id', name='_student_event_uc'),)
+# ==========================================
+# 模块二：普通活动
+# ==========================================
 
-# 【【【 改造模型：活动表 】】】
 class Event(db.Model):
+    __tablename__ = 'events'
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
-    location = db.Column(db.String(200), nullable=False)
-    required_volunteers = db.Column(db.Integer, nullable=False)
-    current_volunteers = db.Column(db.Integer, default=0)
-    leader_name = db.Column(db.String(100))
-    leader_contact = db.Column(db.String(100))
     registration_deadline = db.Column(db.DateTime, nullable=False)
-    # 新增字段：年级限制，以逗号分隔，如 "G1,G2"
-    grade_restriction = db.Column(db.String(100), nullable=True)
-    # 关系不变
-    volunteers = db.relationship('Volunteer', backref='event', lazy=True, cascade="all, delete-orphan")
-    # 删除了 status 字段
+    location = db.Column(db.String(100))
+    leader_name = db.Column(db.String(50))
+    leader_contact = db.Column(db.String(50))
+    required_volunteers = db.Column(db.Integer, nullable=False)
+    grade_limit = db.Column(db.String(100), default="ALL") 
+    hours_value = db.Column(db.Float, nullable=False, default=1.0)
+    signups = db.relationship('EventSignup', backref='event', lazy='dynamic')
 
-    # 【【【 核心改动：动态计算 status 】】】
+    @property
+    def current_volunteers_count(self):
+        return self.signups.count()
+
     @property
     def status(self):
         now = datetime.now()
-        # 最终状态，优先级最高
-        if now > self.end_time:
-            return "已结束"
-        # 正在进行中
-        elif now > self.start_time:
-            return "进行中"
-        # 检查是否满员，这个状态比截止日期更重要
-        elif self.current_volunteers >= self.required_volunteers:
-            return "报名已满"
-        # 检查报名是否已截止
-        elif now > self.registration_deadline:
-            return "报名已截止"
-        # 如果以上都不是，那就是正在招募中
-        else:
-            return "招募中"
+        if now > self.end_time: return "已结束"
+        if now > self.start_time: return "进行中"
+        if self.signups.count() >= self.required_volunteers: return "已满员"
+        if now > self.registration_deadline: return "报名截止"
+        return "招募中"
+    
     def to_dict(self):
         return {
-            "id": self.id, "title": self.title, "description": self.description,
-            "startTime": self.start_time.isoformat(), "endTime": self.end_time.isoformat(),
-            "location": self.location, "requiredVolunteers": self.required_volunteers,
-            "currentVolunteers": self.current_volunteers,
-            "status": self.status, # 直接调用上面的动态计算属性
-            "leaderName": self.leader_name, "leaderContact": self.leader_contact,
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "startTime": self.start_time.isoformat(),
+            "endTime": self.end_time.isoformat(),
+            "location": self.location,
+            "requiredVolunteers": self.required_volunteers,
+            "currentVolunteers": self.current_volunteers_count,
+            "status": self.status,
+            "leaderName": self.leader_name,
+            "leaderContact": self.leader_contact,
             "registrationDeadline": self.registration_deadline.isoformat(),
-            "gradeRestriction": self.grade_restriction
+            "gradeLimit": self.grade_limit,
+            "hoursValue": self.hours_value
         }
 
+class EventSignup(db.Model):
+    __tablename__ = 'event_signups'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+    signup_time = db.Column(db.DateTime, default=datetime.now)
+    __table_args__ = (db.UniqueConstraint('student_id', 'event_id'),)
 
-# --- 4. API 路由全面升级 ---
+# ==========================================
+# 模块三：周常任务
+# ==========================================
 
-@app.route('/api/events', methods=['POST'])
-def create_event():
+class RecurringShift(db.Model):
+    __tablename__ = 'recurring_shifts'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    day_of_week = db.Column(db.Integer, nullable=False) 
+    start_time_str = db.Column(db.String(10), nullable=False)
+    end_time_str = db.Column(db.String(10), nullable=False)
+    capacity = db.Column(db.Integer, default=1)
+    hours_value = db.Column(db.Float, default=0.5)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "dayOfWeek": self.day_of_week,
+            "timeRange": f"{self.start_time_str} - {self.end_time_str}",
+            "capacity": self.capacity,
+            "hoursValue": self.hours_value
+        }
+
+class WeeklyRotation(db.Model):
+    __tablename__ = 'weekly_rotations'
+    id = db.Column(db.Integer, primary_key=True)
+    week_start_date = db.Column(db.Date, unique=True, nullable=False) 
+    assigned_class_str = db.Column(db.String(50), nullable=False)
+
+class ShiftSignup(db.Model):
+    __tablename__ = 'shift_signups'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'))
+    shift_id = db.Column(db.Integer, db.ForeignKey('recurring_shifts.id'))
+    date = db.Column(db.Date, nullable=False) 
+    __table_args__ = (db.UniqueConstraint('shift_id', 'date', 'student_id'),)
+  
+# ==========================================
+# API 模块一：学生系统 (Student APIs)
+# ==========================================
+
+@app.route('/api/students/login', methods=['POST'])
+def login_or_register():
+    """
+    学生登录/注册接口。
+    逻辑：根据手机号判断。
+    - 如果手机号存在 -> 更新信息 (姓名、班级等) -> 返回学生信息
+    - 如果手机号不存在 -> 创建新学生 -> 返回学生信息
+    """
+    data = request.get_json()
+    
+    # 必填字段检查
+    required_fields = ['name', 'phone', 'enrollmentYear', 'classNumber']
+    if not all(field in data for field in required_fields):
+        return jsonify({"message": "缺少必填信息 (姓名, 手机, 入学年份, 班级)"}), 400
+
+    phone = data['phone']
+    
+    # 查找学生是否存在
+    student = Student.query.filter_by(phone=phone).first()
+    
+    try:
+        if student:
+            # --- 更新现有学生信息 ---
+            student.name = data['name']
+            student.enrollment_year = int(data['enrollmentYear'])
+            student.class_number = int(data['classNumber'])
+            # 选填信息
+            if 'qq' in data: student.qq = data['qq']
+            if 'wechat' in data: student.wechat = data['wechat']
+            msg = "欢迎回来！信息已更新。"
+        else:
+            # --- 注册新学生 ---
+            student = Student(
+                name=data['name'],
+                phone=phone,
+                enrollment_year=int(data['enrollmentYear']),
+                class_number=int(data['classNumber']),
+                qq=data.get('qq'),
+                wechat=data.get('wechat')
+            )
+            db.session.add(student)
+            msg = "注册成功！"
+        
+        db.session.commit()
+        return jsonify({"message": msg, "student": student.to_dict()}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"操作失败: {str(e)}"}), 500
+
+@app.route('/api/students/profile', methods=['GET'])
+def get_student_profile():
+    """
+    获取学生档案 (包含总时长和历史记录)
+    用法: /api/students/profile?phone=13800000000
+    """
+    phone = request.args.get('phone')
+    if not phone:
+        return jsonify({"message": "请提供手机号"}), 400
+    
+    student = Student.query.filter_by(phone=phone).first()
+    if not student:
+        return jsonify({"message": "未找到该学生"}), 404
+        
+    return jsonify(student.to_dict())
+
+
+# ==========================================
+# API 模块二：普通活动系统 (Event APIs)
+# ==========================================
+
+@app.route('/api/events', methods=['GET'])
+def get_events():
+    """
+    获取活动列表。
+    排序逻辑：
+    1. 招募中 (最优先)
+    2. 已满员
+    3. 报名截止
+    4. 进行中
+    5. 已结束 (最不重要)
+    同级状态下，按开始时间排序。
+    """
+    now = datetime.now()
+    
+    # 自定义排序优先级 (SQL Case 语句)
+    status_priority = case(
+        (Event.end_time < now, 5),                                  # 已结束
+        (Event.start_time < now, 4),                                # 进行中
+        (Event.registration_deadline < now, 3),                     # 截止
+        (Event.signups.any(), 2), # 简化处理：满员逻辑较复杂，暂时放在后面判断，或在前端处理
+        else_=1                                                     # 招募中
+    )
+    
+    # 获取所有活动，按开始时间倒序（新的在前面）
+    # 注意：为了性能，这里只是简单按时间排序，复杂的状态排序建议在前端做，或者数据库层面需要更复杂的SQL
+    events = Event.query.order_by(Event.start_time.desc()).all()
+    
+    # 转换成字典
+    event_list = [e.to_dict() for e in events]
+    
+    # 再次在 Python 层面进行一次精准排序 (因为数据库层面的 status 是动态属性，无法直接 order_by)
+    # 定义状态权重
+    priority_map = {
+        "招募中": 0,
+        "已满员": 1,
+        "报名截止": 2,
+        "进行中": 3,
+        "已结束": 4
+    }
+    event_list.sort(key=lambda x: priority_map.get(x['status'], 5))
+    
+    return jsonify(event_list)
+
+@app.route('/api/events/<int:event_id>', methods=['GET'])
+def get_event_detail(event_id):
+    """获取单个活动详情"""
+    event = Event.query.get_or_404(event_id)
+    return jsonify(event.to_dict())
+
+@app.route('/api/events/<int:event_id>/signup', methods=['POST'])
+def signup_event(event_id):
+    """
+    报名普通活动
+    需要 JSON: { "studentId": 123 }
+    """
+    data = request.get_json()
+    student_id = data.get('studentId')
+    
+    event = Event.query.get_or_404(event_id)
+    student = Student.query.get(student_id)
+    
+    if not student:
+        return jsonify({"message": "学生不存在"}), 404
+
+    # --- 1. 基础状态检查 ---
+    if event.status != "招募中":
+        return jsonify({"message": f"无法报名，当前状态：{event.status}"}), 400
+    
+    # --- 2. 年级限制检查 (关键功能) ---
+    # event.grade_limit 格式如 "2023,2024" 或 "ALL"
+    if event.grade_limit and event.grade_limit != "ALL":
+        allowed_years = event.grade_limit.split(',') # ['2023', '2024']
+        if str(student.enrollment_year) not in allowed_years:
+            return jsonify({
+                "message": f"抱歉，该活动仅限 {event.grade_limit} 级学生报名"
+            }), 403
+
+    # --- 3. 重复报名检查 ---
+    existing = EventSignup.query.filter_by(student_id=student.id, event_id=event.id).first()
+    if existing:
+        return jsonify({"message": "您已经报名过该活动了"}), 409
+
+    # --- 4. 执行报名 ---
+    try:
+        new_signup = EventSignup(student_id=student.id, event_id=event.id)
+        db.session.add(new_signup)
+        db.session.commit()
+        return jsonify({"message": "报名成功！"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "报名失败，请稍后重试"}), 500
+
+# 这是一个临时的管理员接口，用于发布活动测试
+@app.route('/api/admin/events', methods=['POST'])
+def admin_create_event():
     data = request.get_json()
     try:
         new_event = Event(
-            title=data['title'], description=data['description'],
+            title=data['title'],
+            description=data.get('description', ''),
             start_time=datetime.fromisoformat(data['startTime']),
             end_time=datetime.fromisoformat(data['endTime']),
+            registration_deadline=datetime.fromisoformat(data['registrationDeadline']),
             location=data['location'],
             required_volunteers=int(data['requiredVolunteers']),
+            hours_value=float(data.get('hoursValue', 1.0)),
+            grade_limit=data.get('gradeLimit', 'ALL'), # 默认为 ALL
             leader_name=data.get('leaderName'),
-            leader_contact=data.get('leaderContact'),
-            registration_deadline=datetime.fromisoformat(data['registrationDeadline']),
-            # 新增：接收年级限制
-            grade_restriction=data.get('gradeRestriction')
+            leader_contact=data.get('leaderContact')
         )
         db.session.add(new_event)
         db.session.commit()
         return jsonify(new_event.to_dict()), 201
     except Exception as e:
-        db.session.rollback()
-        return jsonify({"message": f"创建失败: {str(e)}"}), 500
-
-@app.route('/api/events/<int:event_id>/register', methods=['POST'])
-def register_for_event(event_id):
-    event = Event.query.get_or_404(event_id)
-    data = request.get_json()
-
-    # 1. 验证活动状态
-    if event.status not in ["招募中", "报名已满"]: # 允许在满员时尝试报名，以便返回更具体的提示
-        return jsonify({"message": f"抱歉，该活动状态为“{event.status}”，无法报名"}), 400
-    if event.current_volunteers >= event.required_volunteers:
-        return jsonify({"message": "抱歉，该活动报名人数已满"}), 400
-
-    # 2. 验证输入数据
-    name, phone, class_name = data.get('name'), data.get('phone'), data.get('className')
-    qq, wechat = data.get('qq'), data.get('wechat')
-    if not all([name, phone, class_name]): return jsonify({"message": "姓名、手机号和年级班级不能为空"}), 400
-    if not qq and not wechat: return jsonify({"message": "QQ号和微信号必须至少填写一个"}), 400
+        return jsonify({"message": str(e)}), 500
     
-    # 3. 【新增】验证年级格式 (G+数字+C+数字)
-    if not re.match(r'^G\d+C\d+$', class_name):
-        return jsonify({"message": "年级格式不正确，请严格按照 'G年级号C班级号' 格式填写，例如 G1C1"}), 400
-        
-    # 4. 【新增】验证年级是否符合限制
-    if event.grade_restriction:
-        allowed_grades = event.grade_restriction.split(',')
-        student_grade = f"G{re.search(r'G(\d+)', class_name).group(1)}"
-        if student_grade not in allowed_grades:
-            return jsonify({"message": f"抱歉，此活动仅限 {event.grade_restriction} 年级报名"}), 403 # 403 Forbidden
-
-    # 5. 查找或创建学生个人信息
-    student = StudentProfile.query.filter_by(phone=phone).first()
-    if student:
-        # 如果学生存在，更新其信息
-        student.name = name
-        student.class_name = class_name
-        student.qq = qq
-        student.wechat = wechat
-    else:
-        # 如果不存在，创建新学生
-        student = StudentProfile(name=name, phone=phone, class_name=class_name, qq=qq, wechat=wechat)
-        db.session.add(student)
-
-    # 6. 检查是否已报名
-    existing_registration = Volunteer.query.filter_by(event_id=event_id, student_profile=student).first()
-    if existing_registration:
-        return jsonify({"message": "您已报名该活动，请勿重复提交"}), 409
-
-    # 7. 创建报名记录
-    try:
-        new_registration = Volunteer(event_id=event_id, student_profile=student)
-        event.current_volunteers += 1
-        db.session.add(new_registration)
-        db.session.commit()
-        return jsonify({"message": "报名成功！"}), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"message": f"服务器内部错误: {str(e)}"}), 500
-
-@app.route('/api/volunteers/lookup', methods=['GET'])
-def lookup_volunteer():
-    phone = request.args.get('phone') # 改为使用手机号查找，更唯一
-    if not phone: return jsonify({"message": "需要提供手机号"}), 400
-    
-    student = StudentProfile.query.filter_by(phone=phone).first()
-    
-    if student:
-        return jsonify(student.to_dict())
-    else:
-        return jsonify({})
-
-@app.route('/api/events/<int:event_id>/volunteers', methods=['GET'])
-def get_event_volunteers(event_id):
-    # 【改动】现在需要JOIN查询来获取报名者的详细信息
-    registrations = db.session.query(Volunteer, StudentProfile).join(StudentProfile).filter(Volunteer.event_id == event_id).all()
-    
-    volunteer_list = []
-    for reg, profile in registrations:
-        volunteer_list.append({
-            "registrationId": reg.id, # 这是 Volunteer 表的 ID，用于删除
-            "name": profile.name,
-            "phone": profile.phone,
-            "className": profile.class_name,
-            "qq": profile.qq,
-            "wechat": profile.wechat
-        })
-    return jsonify(volunteer_list)
-
-@app.route('/api/volunteers/<int:volunteer_id>', methods=['DELETE'])
-def delete_volunteer(volunteer_id):
-    # 这个 volunteer_id 现在是 Volunteer 表 (报名记录) 的 id
-    registration = Volunteer.query.get_or_404(volunteer_id)
-    event = Event.query.get(registration.event_id)
-    try:
-        db.session.delete(registration)
-        if event and event.current_volunteers > 0:
-            event.current_volunteers -= 1
-        db.session.commit()
-        return jsonify({"message": "报名记录已成功删除"}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"message": f"删除失败: {str(e)}"}), 500
-    
-@app.route('/api/events/<int:event_id>', methods=['DELETE'])
-def delete_event(event_id):
-    # 1. 根据 ID 查找活动，如果不存在则返回 404
-    event = Event.query.get_or_404(event_id)
-    
-    try:
-        # 2. 从数据库会话中删除该活动对象
-        #    由于设置了 cascade, 所有相关的 Volunteer 记录也会被一并删除
-        db.session.delete(event)
-        
-        # 3. 提交更改
-        db.session.commit()
-        
-        return jsonify({"message": "活动已成功删除"}), 200 # 200 OK
-    
-    except Exception as e:
-        db.session.rollback() # 出错时回滚
-        return jsonify({"message": f"删除活动失败: {str(e)}"}), 500
-
-# get_events 和 get_event_detail 路由无需改动，因为 to_dict() 已经处理了 status
-@app.route('/api/events', methods=['GET'])
-def get_events():
-    # 【【【 修复：实现自定义排序 】】】
-    now = datetime.now()
-
-    # 【【【 核心修复：CASE 语句的判断顺序必须和 Event.status 属性的逻辑完全一致 】】】
-    # 这样才能保证排序依据和显示的状态是同步的。
-    # 优先级数字越小，越靠前。
-    status_priority = case(
-        # 1. 首先判断是否已结束
-        (Event.end_time < now, 5),                                  # 已结束 -> 优先级 5 (最低)
-        # 2. 其次判断是否进行中
-        (Event.start_time < now, 4),                                # 进行中 -> 优先级 4
-        # 3. 然后判断是否已满员
-        (Event.current_volunteers >= Event.required_volunteers, 2), # 报名已满 -> 优先级 2
-        # 4. 再判断报名是否截止
-        (Event.registration_deadline < now, 3),                     # 报名已截止 -> 优先级 3
-        # 5. 都不是，才是招募中
-        else_=1                                                     # 招募中 -> 优先级 1 (最高)
-    )
-
-    # 查询时，首先根据我们自定义的优先级升序排列，
-    # 然后在优先级相同的情况下，按活动开始时间升序排列 (越近的活动越靠前)
-    events = Event.query.order_by(status_priority.asc(), Event.start_time.asc()).all()
-    
-    return jsonify([event.to_dict() for event in events])
-
-@app.route('/api/events/<int:event_id>')
-def get_event_detail(event_id):
-    event = Event.query.get_or_404(event_id)
-    return jsonify(event.to_dict())
-
-
-# --- 5. 启动服务器 ---
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
