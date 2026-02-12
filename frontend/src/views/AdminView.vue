@@ -1,214 +1,450 @@
 <template>
-  <div class="admin-container">
-    <div v-if="!isAuthenticated" class="password-gate">
-      <h1>管理后台</h1>
-      <p>请输入访问密码</p>
-      <form @submit.prevent="checkPassword">
-        <input v-model="passwordInput" type="password" placeholder="请输入密码">
-        <button type="submit">进入</button>
-        <p v-if="passwordError" class="error-message">{{ passwordError }}</p>
-      </form>
-    </div>
+  <div class="container">
+    <div class="glass-panel admin-container">
+      <header class="admin-header">
+        <div class="flex-between">
+            <h2>🛡️ 管理员后台</h2>
+            <button @click="handleLogout" class="btn-sm btn-logout">退出登录</button>
+        </div>
+        <div class="tabs">
+          <button 
+            v-for="tab in ['发布活动', '班级轮换', '学生数据']" 
+            :key="tab"
+            class="tab-btn"
+            :class="{ active: currentTab === tab }"
+            @click="currentTab = tab"
+          >
+            {{ tab }}
+          </button>
+        </div>
+      </header>
 
-    <div v-else>
-      <h1>管理后台</h1>
-      <p>在这里查看各个活动的报名情况。</p>
+      <!-- Tab 1: 发布活动 -->
+      <div v-if="currentTab === '发布活动'" class="tab-content">
+        <h3>发布新活动</h3>
+        <form @submit.prevent="handlePublish">
+          <div class="form-group">
+            <label>活动标题</label>
+            <input v-model="eventForm.title" required />
+          </div>
+          
+          <div class="form-group">
+            <label>描述</label>
+            <textarea v-model="eventForm.description" rows="3"></textarea>
+          </div>
 
-      <div class="event-selector">
-        <label for="event-select">选择一个活动查看:</label>
-        <select id="event-select" v-model="selectedEventId" @change="fetchVolunteers">
-          <option disabled value="">请选择</option>
-          <option v-for="event in events" :key="event.id" :value="event.id">
-            {{ event.title }}
-          </option>
-        </select>
-        
-        <button 
-          v-if="selectedEventId" 
-          @click="deleteEvent" 
-          class="delete-event-button"
-        >
-          删除这个活动
-        </button>
+          <div class="form-row">
+            <div class="form-group">
+              <label>开始时间</label>
+              <input v-model="eventForm.startTime" type="datetime-local" required />
+            </div>
+            <div class="form-group">
+              <label>结束时间</label>
+              <input v-model="eventForm.endTime" type="datetime-local" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>报名截止</label>
+              <input v-model="eventForm.registrationDeadline" type="datetime-local" required />
+            </div>
+            <div class="form-group">
+              <label>招募人数</label>
+              <input v-model="eventForm.requiredVolunteers" type="number" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>地点</label>
+              <input v-model="eventForm.location" required />
+            </div>
+            <div class="form-group">
+              <label>志愿工时</label>
+              <input v-model="eventForm.hoursValue" type="number" step="0.1" required />
+            </div>
+          </div>
+          
+          <div class="form-row">
+             <div class="form-group">
+              <label>年级限制 (逗号分隔，或ALL)</label>
+              <input v-model="eventForm.gradeLimit" placeholder="ALL" />
+            </div>
+            <div class="form-group">
+               <label>负责人姓名</label>
+              <input v-model="eventForm.leaderName" />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" :disabled="loading">
+            {{ loading ? '发布中...' : '发布活动' }}
+          </button>
+        </form>
       </div>
 
-      <div v-if="loadingVolunteers" class="loading-message">正在加载报名信息...</div>
-      <div v-else-if="volunteers.length > 0" class="volunteer-list">
-        <h2>{{ selectedEventTitle }} - 报名名单 ({{ volunteers.length }}人)</h2>
-        <div class="table-wrapper">
+      <!-- Tab 2: 班级轮换 -->
+      <div v-if="currentTab === '班级轮换'" class="tab-content">
+        <h3>周常岗位轮值设置</h3>
+        
+        <div class="rotation-form">
+          <div class="form-group">
+             <label>周一日期 (一周开始)</label>
+             <input v-model="rotationForm.weekStartDate" type="date" required />
+             <small class="hint">必须选择周一的日期</small>
+          </div>
+          <div class="form-group">
+             <label>轮值班级 (格式: 入学年份-班级号)</label>
+             <input v-model="rotationForm.assignedClass" placeholder="例如: 2023-1" required />
+          </div>
+          <button @click="handleSetRotation" class="btn-primary" :disabled="loading">保存设置</button>
+        </div>
+
+        <hr />
+        
+        <h4>已设置的轮换</h4>
+        <div v-if="rotations.length > 0" class="rotation-list">
+           <div v-for="rot in rotations" :key="rot.id" class="rotation-item">
+             <span class="rot-date">{{ rot.weekStartDate }}</span>
+             <span class="arrow">➡️</span>
+             <span class="rot-class">{{ rot.assignedClass }}</span>
+           </div>
+        </div>
+        <p v-else class="empty-text">暂无记录</p>
+      </div>
+
+      <!-- Tab 3: 学生数据 -->
+      <div v-if="currentTab === '学生数据'" class="tab-content">
+        <h3>学生时长统计</h3>
+        
+        <div class="filter-row">
+          <div class="search-box">
+            <label>搜索姓名:</label>
+            <input v-model="searchName" type="text" placeholder="输入学生姓名" />
+          </div>
+          
+          <div class="search-box">
+            <label>筛选班级:</label>
+            <select v-model="selectedClass">
+              <option value="">全部班级</option>
+              <option v-for="cls in uniqueClasses" :key="cls" :value="cls">
+                {{ cls }}
+              </option>
+            </select>
+          </div>
+          
+          <button @click="loadStudents" class="btn-sm btn-secondary">刷新数据</button>
+        </div>
+        
+        <div class="table-container">
           <table>
             <thead>
               <tr>
                 <th>姓名</th>
+                <th>班级</th>
+                <th>总时长</th>
                 <th>手机号</th>
-                <th>年级班级</th>
-                <th>QQ</th>
-                <th>微信</th>
-                <th>操作</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="v in volunteers" :key="v.registrationId">
-                <td>{{ v.name }}</td>
-                <td>{{ v.phone }}</td>
-                <td>{{ v.className }}</td>
-                <td>{{ v.qq || '-' }}</td>
-                <td>{{ v.wechat || '-' }}</td>
-                <td>
-                  <button @click="deleteVolunteer(v.registrationId)" class="delete-button">删除</button>
-                </td>
+              <tr v-for="student in filteredStudents" :key="student.id">
+                <td>{{ student.name }}</td>
+                <td>{{ student.fullClassName }}</td>
+                <td class="font-bold text-primary">{{ student.totalHours }}h</td>
+                <td>{{ student.phone }}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div v-else-if="selectedEventId" class="empty-message">该活动暂无报名信息。</div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { reactive, ref, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router'; // [NEW]
+import { store } from '../store'; // [NEW]
 import apiClient from '../services/api';
 
-// --- 密码保护 (保持不变) ---
-const ADMIN_PASSWORD = 'admin42';
-const isAuthenticated = ref(false);
-const passwordInput = ref('');
-const passwordError = ref('');
+const router = useRouter(); // [NEW]
+const currentTab = ref('发布活动');
+const loading = ref(false);
 
-const checkPassword = () => {
-  if (passwordInput.value === ADMIN_PASSWORD) {
-    isAuthenticated.value = true;
-    fetchEvents();
-  } else {
-    passwordError.value = '密码错误';
-  }
+// ... (forms)
+
+const handleLogout = () => {
+  store.logout();
+  router.push('/');
 };
 
-// --- 数据获取 (保持不变) ---
-const events = ref([]);
-const selectedEventId = ref('');
-const volunteers = ref([]);
-const loadingVolunteers = ref(false);
-
-const selectedEventTitle = computed(() => {
-  const event = events.value.find(e => e.id === selectedEventId.value);
-  return event ? event.title : '';
+const eventForm = reactive({
+  title: '', description: '', startTime: '', endTime: '', 
+  registrationDeadline: '', location: '', requiredVolunteers: 10, 
+  hoursValue: 2.0, gradeLimit: 'ALL', leaderName: ''
 });
 
-const fetchEvents = async () => {
-  try {
-    const response = await apiClient.get('/events');
-    events.value = response.data;
-  } catch (error) {
-    console.error("获取活动列表失败:", error);
-  }
-};
+const rotationForm = reactive({
+  weekStartDate: '',
+  assignedClass: ''
+});
 
-const fetchVolunteers = async () => {
-  if (!selectedEventId.value) return;
-  loadingVolunteers.value = true;
-  volunteers.value = [];
+const rotations = ref([]);
+const students = ref([]);
+
+// 学生数据筛选
+const searchName = ref('');
+const selectedClass = ref('');
+
+const uniqueClasses = computed(() => {
+  const classes = students.value.map(s => s.fullClassName);
+  return [...new Set(classes)].sort();
+});
+
+const filteredStudents = computed(() => {
+  return students.value.filter(student => {
+    const nameMatch = !searchName.value || student.name.includes(searchName.value);
+    const classMatch = !selectedClass.value || student.fullClassName === selectedClass.value;
+    return nameMatch && classMatch;
+  });
+});
+
+// Methods
+const handlePublish = async () => {
+  loading.value = true;
   try {
-    const response = await apiClient.get(`/events/${selectedEventId.value}/volunteers`);
-    volunteers.value = response.data;
+    await apiClient.post('/admin/events', eventForm);
+    alert('活动发布成功！');
+    Object.keys(eventForm).forEach(k => eventForm[k] = ''); // reset
+    eventForm.requiredVolunteers = 10;
+    eventForm.hoursValue = 2.0;
+    eventForm.gradeLimit = 'ALL';
   } catch (error) {
-    console.error("获取报名者列表失败:", error);
+    alert('发布失败: ' + error.message);
   } finally {
-    loadingVolunteers.value = false;
+    loading.value = false;
   }
 };
 
-// --- 删除报名记录的逻辑 (保持不变) ---
-const deleteVolunteer = async (registrationId) => {
-  if (!window.confirm("您确定要删除这条报名记录吗？此操作不可撤销。")) {
-    return;
-  }
+const loadRotations = async () => {
   try {
-    await apiClient.delete(`/volunteers/${registrationId}`);
-    volunteers.value = volunteers.value.filter(v => v.registrationId !== registrationId);
-    const event = events.value.find(e => e.id === selectedEventId.value);
-    if (event && event.currentVolunteers > 0) {
-      event.currentVolunteers--;
-    }
-    alert("删除成功！");
-  } catch (error) {
-    console.error("删除失败:", error);
-    alert("删除失败，请稍后重试。");
+    const res = await apiClient.get('/admin/rotations');
+    rotations.value = res.data;
+  } catch (e) {
+    console.error(e);
   }
 };
 
-// 【【【 脚本修改: 新增删除整个活动的函数 】】】
-const deleteEvent = async () => {
-  if (!selectedEventId.value) {
-    alert("请先选择一个活动。");
-    return;
-  }
-
-  // 弹出带有活动名称的二次确认框，防止误操作
-  const eventTitle = selectedEventTitle.value;
-  if (!window.confirm(`您确定要永久删除活动 “${eventTitle}” 吗？\n此操作将同时删除所有相关的报名信息，且不可撤销！`)) {
-    return;
-  }
-
+const handleSetRotation = async () => {
+  if (!rotationForm.weekStartDate || !rotationForm.assignedClass) return alert('请填写完整');
+  loading.value = true;
   try {
-    await apiClient.delete(`/events/${selectedEventId.value}`);
-    
-    // 从前端的活动列表中移除该活动
-    events.value = events.value.filter(e => e.id !== selectedEventId.value);
-    
-    // 重置选择状态，清空报名列表
-    selectedEventId.value = '';
-    volunteers.value = [];
-    
-    alert(`活动 “${eventTitle}” 已成功删除。`);
-
-  } catch (error) {
-    console.error("删除活动失败:", error);
-    alert("删除活动失败，请稍后重试。");
+    await apiClient.post('/admin/rotations', rotationForm);
+    alert('设置成功');
+    loadRotations();
+  } catch (e) {
+    alert(e.response?.data?.message || '设置失败');
+  } finally {
+    loading.value = false;
   }
 };
+
+const loadStudents = async () => {
+  try {
+    const res = await apiClient.get('/admin/students');
+    students.value = res.data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+// Lifecycle
+watch(currentTab, (newTab) => {
+  if (newTab === '班级轮换') loadRotations();
+  if (newTab === '学生数据') loadStudents();
+});
 </script>
 
 <style scoped>
-/* (大部分样式保持不变) */
-.admin-container { max-width: 1000px; margin: 0 auto; }
-.password-gate { text-align: center; padding: 40px; }
-.table-wrapper { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-th { background-color: #f2f2f2; }
-tr:nth-child(even) { background-color: #f9f9f9; }
-.delete-button { background-color: #dc3545; color: white; border: none; padding: 5px 10px; font-size: 0.9em; border-radius: 5px; cursor: pointer; transition: background-color 0.2s; }
-.delete-button:hover { background-color: #c82333; }
-.loading-message, .error-message, .empty-message { text-align: center; padding: 40px; color: #6c757d; }
+.admin-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+}
 
-/* 【【【 样式修改: 为选择器和新按钮添加样式 】】】 */
-.event-selector {
-  margin: 20px 0;
+.admin-header {
+  background: rgba(255,255,255,0.5);
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-logout {
+    background: #fca5a5;
+    color: #991b1b;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+  padding: 30px;
+}
+
+.form-group { margin-bottom: 20px; }
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+textarea, input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-row { 
+  display: flex; 
+  gap: 20px; 
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.rotation-form {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 30px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .rotation-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .admin-header {
+    padding: 15px;
+  }
+  
+  .tab-content {
+    padding: 15px;
+  }
+  
+  .tabs {
+    flex-wrap: wrap; /* Allow tabs to wrap on very small screens */
+  }
+}
+
+.rotation-item {
   display: flex;
   align-items: center;
-  gap: 15px; /* 在下拉框和按钮之间增加间距 */
-  flex-wrap: wrap; /* 允许在小屏幕上换行 */
+  gap: 12px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
 }
-.event-selector select { 
-  padding: 10px; 
-  font-size: 1em; 
-  border-radius: 5px;
-  border: 1px solid #ccc;
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
 }
-.delete-event-button {
-  background-color: #c82333; /* 使用更深的红色以示区别和危险 */
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  font-size: 1em;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.5);
 }
-.delete-event-button:hover {
-  background-color: #a71d2a;
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
 }
+
+th {
+  background: rgba(79, 70, 229, 0.1);
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+tr:hover {
+  background: rgba(79, 70, 229, 0.05);
+}
+
+/* 筛选框样式 */
+.filter-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-box label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.search-box input,
+.search-box select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.hint { font-size: 0.8rem; color: #666; display: block; margin-top: 4px; }
+.mb-4 { margin-bottom: 16px; }
+.font-bold { font-weight: bold; }
+.text-primary { color: var(--primary-color); }
 </style>

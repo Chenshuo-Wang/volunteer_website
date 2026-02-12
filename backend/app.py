@@ -41,6 +41,12 @@ class Student(db.Model):
     
     qq = db.Column(db.String(50))
     wechat = db.Column(db.String(50))
+    
+    # 密码字段 (明文存储，方便管理员重置)
+    password = db.Column(db.String(100), nullable=True)
+    
+    # [NEW] 管理员标识
+    is_admin = db.Column(db.Boolean, default=False)
 
     # 关联关系
     event_signups = db.relationship('EventSignup', backref='student', lazy='dynamic')
@@ -112,7 +118,8 @@ class Student(db.Model):
             "qq": self.qq,
             "wechat": self.wechat,
             "totalHours": self.total_hours,
-            "history": self.get_history() # 【核心】前端现在可以直接读到这个列表
+            "isAdmin": self.is_admin, # [NEW] 返回管理员状态
+            "history": self.get_history() 
         }
 
 # ==========================================
@@ -216,60 +223,84 @@ class ShiftSignup(db.Model):
 # API 模块一：学生系统 (Student APIs)
 # ==========================================
 
-@app.route('/api/students/login', methods=['POST'])
-def login_or_register():
+@app.route('/api/students/register', methods=['POST'])
+def register_student():
     """
-    学生登录/注册接口。
-    逻辑：根据手机号判断。
-    - 如果手机号存在 -> 更新信息 (姓名、班级等) -> 返回学生信息
-    - 如果手机号不存在 -> 创建新学生 -> 返回学生信息
+    学生注册接口
+    必填字段：name, phone, password, enrollmentYear, classNumber
     """
     data = request.get_json()
     
     # 必填字段检查
-    required_fields = ['name', 'phone', 'enrollmentYear', 'classNumber']
+    required_fields = ['name', 'phone', 'password', 'enrollmentYear', 'classNumber']
     if not all(field in data for field in required_fields):
-        return jsonify({"message": "缺少必填信息 (姓名, 手机, 入学年份, 班级)"}), 400
-
+        return jsonify({"message": "缺少必填信息"}), 400
+    
     phone = data['phone']
     
-    # 查找学生是否存在
-    student = Student.query.filter_by(phone=phone).first()
+    # 检查手机号是否已存在
+    existing = Student.query.filter_by(phone=phone).first()
+    if existing:
+        return jsonify({"message": "该手机号已被注册"}), 409
     
     try:
-        if student:
-            # --- 更新现有学生信息 ---
-            student.name = data['name']
-            student.enrollment_year = int(data['enrollmentYear'])
-            student.class_number = int(data['classNumber'])
-            # 选填信息
-            if 'qq' in data: student.qq = data['qq']
-            if 'wechat' in data: student.wechat = data['wechat']
-            msg = "欢迎回来！信息已更新。"
-        else:
-            # --- 注册新学生 ---
-            student = Student(
-                name=data['name'],
-                phone=phone,
-                enrollment_year=int(data['enrollmentYear']),
-                class_number=int(data['classNumber']),
-                qq=data.get('qq'),
-                wechat=data.get('wechat')
-            )
-            db.session.add(student)
-            msg = "注册成功！"
-        
+        # 创建新学生账号
+        student = Student(
+            name=data['name'],
+            phone=phone,
+            password=data['password'],  # 直接存储密码
+            enrollment_year=int(data['enrollmentYear']),
+            class_number=int(data['classNumber']),
+            qq=data.get('qq'),
+            wechat=data.get('wechat'),
+            is_admin=False  # 普通学生默认非管理员
+        )
+        db.session.add(student)
         db.session.commit()
-        return jsonify({"message": msg, "student": student.to_dict()}), 200
-
+        
+        return jsonify({
+            "message": "注册成功！",
+            "student": student.to_dict()
+        }), 201
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"操作失败: {str(e)}"}), 500
+        return jsonify({"message": f"注册失败: {str(e)}"}), 500
 
-@app.route('/api/students/profile', methods=['GET'])
+@app.route('/api/students/login', methods=['POST'])
+def login_or_register():
+    """
+    学生登录接口（密码验证）
+    必填字段：phone, password
+    """
+    data = request.get_json()
+    
+    phone = data.get('phone')
+    password = data.get('password')
+    
+    if not phone or not password:
+        return jsonify({"message": "请输入手机号和密码"}), 400
+    
+    # 查找学生
+    student = Student.query.filter_by(phone=phone).first()
+    
+    if not student:
+        return jsonify({"message": "手机号未注册"}), 404
+    
+    # 验证密码
+    if student.password != password:
+        return jsonify({"message": "密码错误，如忘记密码请联系管理员"}), 401
+    
+    return jsonify({
+        "message": "登录成功",
+        "student": student.to_dict()
+    }), 200
+
+@app.route('/api/students/profile', methods=['GET', 'PUT'])
 def get_student_profile():
     """
-    获取学生档案 (包含总时长和历史记录)
+    GET: 获取学生档案 (包含总时长和历史记录)
+    PUT: 更新学生信息（包括密码）
     用法: /api/students/profile?phone=13800000000
     """
     phone = request.args.get('phone')
@@ -279,8 +310,31 @@ def get_student_profile():
     student = Student.query.filter_by(phone=phone).first()
     if not student:
         return jsonify({"message": "未找到该学生"}), 404
+    
+    if request.method == 'GET':
+        return jsonify(student.to_dict())
+    
+    elif request.method == 'PUT':
+        # 更新学生信息（主要用于修改密码）
+        data = request.get_json()
         
-    return jsonify(student.to_dict())
+        # 如果要修改密码，需要验证旧密码
+        if 'oldPassword' in data and 'newPassword' in data:
+            if student.password != data['oldPassword']:
+                return jsonify({"message": "旧密码错误"}), 401
+            
+            student.password = data['newPassword']
+            db.session.commit()
+            return jsonify({"message": "密码修改成功"}), 200
+        
+        # 其他信息更新（如需要）
+        if 'qq' in data:
+            student.qq = data['qq']
+        if 'wechat' in data:
+            student.wechat = data['wechat']
+            
+        db.session.commit()
+        return jsonify({"message": "信息更新成功", "student": student.to_dict()}), 200
 
 
 # ==========================================
@@ -379,8 +433,81 @@ def signup_event(event_id):
         db.session.rollback()
         return jsonify({"message": "报名失败，请稍后重试"}), 500
 
-# 这是一个临时的管理员接口，用于发布活动测试
+# ==========================================
+# 模块四：管理员系统 (Admin APIs) - 已合并至 Student
+# ==========================================
+
+from functools import wraps
+
+# --- Admin Auth Decorator ---
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # 检查请求头中的 X-Admin-Token (即手机号)
+        token = request.headers.get('X-Admin-Token')
+        if not token:
+            return jsonify({"message": "未授权访问"}), 401
+        
+        # 查找该手机号对应的学生，并检查是否为管理员
+        admin_student = Student.query.filter_by(phone=token).first()
+        if not admin_student or not admin_student.is_admin:
+             return jsonify({"message": "无效的管理权限"}), 403
+             
+        return f(*args, **kwargs)
+    return decorated_function
+
+# 注意：移除了单独的 /api/admin/login，统一使用 /api/students/login
+    
+@app.route('/api/admin/rotations', methods=['GET', 'POST'])
+@admin_required
+def manage_rotations():
+    """管理周常任务的班级轮换"""
+    if request.method == 'GET':
+        rotations = WeeklyRotation.query.order_by(WeeklyRotation.week_start_date.desc()).all()
+        return jsonify([{
+            "id": r.id,
+            "weekStartDate": r.week_start_date.isoformat(),
+            "assignedClass": r.assigned_class_str
+        } for r in rotations])
+        
+    if request.method == 'POST':
+        data = request.get_json()
+        try:
+            date_obj = datetime.strptime(data['weekStartDate'], "%Y-%m-%d").date()
+            # 确保是周一
+            if date_obj.weekday() != 0:
+                return jsonify({"message": "必须选择周一作为开始日期"}), 400
+                
+            # 检查是否存在
+            existing = WeeklyRotation.query.filter_by(week_start_date=date_obj).first()
+            if existing:
+                existing.assigned_class_str = data['assignedClass']
+                msg = "轮换已更新"
+            else:
+                new_rotation = WeeklyRotation(
+                    week_start_date=date_obj,
+                    assigned_class_str=data['assignedClass']
+                )
+                db.session.add(new_rotation)
+                msg = "轮换已创建"
+                
+            db.session.commit()
+            return jsonify({"message": msg}), 201
+        except Exception as e:
+            return jsonify({"message": str(e)}), 500
+
+@app.route('/api/admin/students', methods=['GET'])
+@admin_required
+def get_all_students_stats():
+    """获取所有学生的统计数据"""
+    students = Student.query.all()
+    # 按照总时长倒序排序
+    student_list = [s.to_dict() for s in students]
+    student_list.sort(key=lambda x: x['totalHours'], reverse=True)
+    return jsonify(student_list)
+
 @app.route('/api/admin/events', methods=['POST'])
+@admin_required
 def admin_create_event():
     data = request.get_json()
     try:
@@ -402,6 +529,6 @@ def admin_create_event():
         return jsonify(new_event.to_dict()), 201
     except Exception as e:
         return jsonify({"message": str(e)}), 500
-    
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

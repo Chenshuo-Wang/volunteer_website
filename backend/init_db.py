@@ -1,7 +1,6 @@
 # backend/init_db.py
 
-# 【修改点】因为文件就在 backend 目录下，直接从 app 导入即可
-from app import app, db, RecurringShift 
+from app import app, db, RecurringShift, Student
 
 def init_data():
     with app.app_context():
@@ -9,9 +8,25 @@ def init_data():
         db.create_all()
         print("数据库表结构创建成功。")
 
-        # 2. 检查是否已经有数据
+        # Create Admin Student if not exists
+        if not Student.query.filter_by(phone='admin').first():
+            print("创建默认管理员账号...")
+            admin_student = Student(
+                name="管理员",
+                phone="admin",
+                password="admin123",  # 管理员默认密码
+                enrollment_year=2020,
+                class_number=0,
+                is_admin=True
+            )
+            db.session.add(admin_student)
+            db.session.commit()
+            print("默认管理员创建成功: admin / admin123")
+
+        # 2. 检查是否已经有周常数据
+
         if RecurringShift.query.first():
-            print("数据已存在，跳过初始化。")
+            print("周常岗位数据已存在，跳过初始化。")
             return
 
         # 3. 写入周常岗位数据

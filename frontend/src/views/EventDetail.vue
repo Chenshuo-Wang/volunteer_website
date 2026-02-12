@@ -1,237 +1,208 @@
 <template>
-  <div class="event-container">
-    <div v-if="loading" class="loading-message">正在加载活动详情...</div>
-    <div v-else-if="error" class="error-message">加载活动失败: {{ error.message }}</div>
-
-    <div v-else-if="event" class="event-card">
-      <div class="event-content">
-        <div class="header-with-status">
-          <h1>{{ event.title }}</h1>
-          <span class="status-badge" :class="getStatusClass(event.status)">{{ event.status }}</span>
-        </div>
-        <p v-if="event.gradeRestriction" class="grade-restriction">
-          <strong>年级限制:</strong> {{ event.gradeRestriction.split(',').join('、') }}
-        </p>
-        <p class="location"><strong>地点:</strong> {{ event.location }}</p>
-        <p class="time"><strong>时间:</strong> {{ formatDate(event.startTime) }} - {{ formatDate(event.endTime) }}</p>
-        <p class="deadline"><strong>报名截止:</strong> {{ formatDate(event.registrationDeadline) }}</p>
-        <hr>
-        <p class="description">{{ event.description }}</p>
-        <hr>
-        <div class="leader-info">
-          <p>负责人: {{ event.leaderName }}</p>
-          <p>联系方式: {{ event.leaderContact }}</p>
-        </div>
-        <div class="volunteer-info">
-          <p>招募人数: {{ event.requiredVolunteers }} 人</p>
-          <p>当前报名: {{ event.currentVolunteers }} 人</p>
+  <div class="container detail-container" v-if="event">
+    <div class="glass-panel detail-card">
+      <div class="header-section">
+        <StatusBadge :status="event.status" />
+        <h1 class="title">{{ event.title }}</h1>
+        <div class="meta-row">
+          <span>📍 {{ event.location }}</span>
+          <span>⏱️ {{ event.hoursValue }} 志愿工时</span>
+          <span>👥 {{ event.currentVolunteers }} / {{ event.requiredVolunteers }} 已报名</span>
         </div>
       </div>
-      
-      <div class="registration-section">
-        <h2>立即报名</h2>
+
+      <div class="content-section">
+        <h3>活动详情</h3>
+        <p class="description">{{ event.description || '暂无详细描述' }}</p>
         
-        <form v-if="registrationStep === 'enterPhone'" @submit.prevent="handlePhoneLookup">
-          <div class="form-group">
-            <label for="phone-lookup">请输入您的手机号</label>
-            <input id="phone-lookup" v-model="form.phone" type="tel" placeholder="确认后将查找您过往的报名信息" required>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">开始时间</span>
+            <span class="value">{{ formatFullDate(event.startTime) }}</span>
           </div>
-          <p v-if="lookupError" class="error-message">{{ lookupError }}</p>
-          <button type="submit" class="register-button" :disabled="isLookupDisabled">
-            {{ lookupLoading ? '查找中...' : '下一步' }}
-          </button>
-        </form>
-
-        <div v-if="registrationStep === 'fillDetails'">
-          <p class="welcome-back">请确认或修改以下信息：</p>
-          <form @submit.prevent="handleRegistration">
-            <div class="form-group">
-              <label for="name">姓名</label>
-              <input id="name" v-model="form.name" type="text" required>
-            </div>
-            <div class="form-group">
-              <label for="className">年级班级</label>
-              <input 
-                id="className" 
-                v-model="form.className" 
-                type="text" 
-                required
-                pattern="G\d+C\d+"
-                title="格式必须为'G+年级号+C+班级号'，例如：G1C1 或 G10C5"
-                placeholder="例如: G1C1 (一年级1班)">
-              <small class="form-hint">格式必须为 G+年级号+C+班级号</small>
-            </div>
-            <div class="form-group">
-              <label for="qq">QQ号</label>
-              <input id="qq" v-model="form.qq" type="text">
-            </div>
-            <div class="form-group">
-              <label for="wechat">微信号</label>
-              <input id="wechat" v-model="form.wechat" type="text">
-              <small class="form-hint">QQ和微信至少填一项</small>
-            </div>
-            <p v-if="registrationError" class="error-message">{{ registrationError }}</p>
-            <div class="button-group">
-              <button type="button" @click="resetStep" class="secondary-button">返回上一步</button>
-              <button type="submit" class="register-button" :disabled="isSubmitDisabled">{{ buttonText }}</button>
-            </div>
-          </form>
+          <div class="info-item">
+            <span class="label">结束时间</span>
+            <span class="value">{{ formatFullDate(event.endTime) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">报名截止</span>
+            <span class="value">{{ formatFullDate(event.registrationDeadline) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">负责人</span>
+            <span class="value">{{ event.leaderName || '未指定' }} ({{ event.leaderContact || '无联系方式' }})</span>
+          </div>
+          <div class="info-item">
+            <span class="label">年级限制</span>
+            <span class="value">{{ event.gradeLimit === 'ALL' ? '全校' : event.gradeLimit + '级' }}</span>
+          </div>
         </div>
+      </div>
 
-        <div v-if="registrationStep === 'success'" class="success-message">🎉 报名成功！期待您的参与！</div>
+      <div class="action-section">
+        <button 
+          v-if="store.user" 
+          @click="handleSignup" 
+          class="btn-primary" 
+          :disabled="!canSignup || loading"
+          :class="{ 'btn-secondary': !canSignup }"
+        >
+          {{ loading ? '处理中...' : signupButtonText }}
+        </button>
+        <div v-else class="login-prompt">
+          <p>请先登录后报名</p>
+          <router-link to="/login" class="btn-primary">去登录</router-link>
+        </div>
       </div>
     </div>
+  </div>
+  <div v-else class="loading-state">
+    加载中...
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import apiClient from '../services/api';
+import { store } from '../store';
+import StatusBadge from '../components/StatusBadge.vue';
 
 const route = useRoute();
+const router = useRouter();
 const event = ref(null);
-const loading = ref(true);
-const error = ref(null);
+const loading = ref(false);
 
-// --- 报名流程状态 ---
-const registrationStep = ref('enterPhone'); // 'enterPhone', 'fillDetails', 'success'
-const lookupLoading = ref(false);
-const lookupError = ref('');
-
-const form = ref({
-  name: '', phone: '', className: '', qq: '', wechat: ''
-});
-const submitting = ref(false);
-const registrationError = ref('');
-
-// --- 步骤一：根据手机号查找信息 ---
-const handlePhoneLookup = async () => {
-  lookupLoading.value = true;
-  lookupError.value = '';
-  try {
-    const response = await apiClient.get(`/volunteers/lookup?phone=${form.value.phone}`);
-    // 用查找到的数据填充表单，如果找不到则为空
-    form.value.name = response.data.name || '';
-    form.value.className = response.data.className || '';
-    form.value.qq = response.data.qq || '';
-    form.value.wechat = response.data.wechat || '';
-    registrationStep.value = 'fillDetails';
-  } catch (err) {
-    lookupError.value = "查找信息失败，请稍后重试。";
-  } finally {
-    lookupLoading.value = false;
-  }
-};
-
-// --- 步骤二：提交完整信息 ---
-const handleRegistration = async () => {
-  if (!form.value.qq && !form.value.wechat) {
-    registrationError.value = 'QQ号和微信号必须至少填写一项。';
-    return;
-  }
-  submitting.value = true;
-  registrationError.value = '';
-  try {
-    await apiClient.post(`/events/${route.params.id}/register`, form.value);
-    registrationStep.value = 'success';
-    if (event.value) event.value.currentVolunteers++;
-  } catch (err) {
-    registrationError.value = err.response?.data?.message || '报名失败，请稍后再试。';
-  } finally {
-    submitting.value = false;
-  }
-};
-
-const resetStep = () => {
-  registrationStep.value = 'enterPhone';
-  // 清空除手机号外的所有信息
-  form.value.name = '';
-  form.value.className = '';
-  form.value.qq = '';
-  form.value.wechat = '';
-};
+const eventId = route.params.id;
 
 onMounted(async () => {
-  const eventId = route.params.id;
   try {
     const response = await apiClient.get(`/events/${eventId}`);
     event.value = response.data;
-  } catch (err) {
-    error.value = err;
-  } finally {
-    loading.value = false;
+  } catch (error) {
+    alert('无法加载活动详情');
+    router.push('/events');
   }
 });
 
-const isLookupDisabled = computed(() => {
-  if (lookupLoading.value || !event.value) return true;
-  // 只有在招募中时才能点击下一步
-  return event.value.status !== '招募中';
+const canSignup = computed(() => {
+  return event.value && event.value.status === '招募中';
 });
-const isSubmitDisabled = computed(() => submitting.value);
-const buttonText = computed(() => submitting.value ? '提交中...' : '确认提交');
 
-const formatDate = (dateString) => {
-  const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-  return new Date(dateString).toLocaleDateString('zh-CN', options);
+const signupButtonText = computed(() => {
+  if (!event.value) return '';
+  if (event.value.status === '招募中') return '立即报名';
+  return event.value.status;
+});
+
+const formatFullDate = (iso) => {
+  return new Date(iso).toLocaleString('zh-CN', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  });
 };
 
-// 【【【 新增：状态徽章的辅助函数 】】】
-const getStatusClass = (status) => {
-  switch (status) {
-    case '招募中': return 'status-recruiting';
-    case '报名已满': return 'status-full';
-    case '报名已截止': return 'status-closed';
-    case '进行中': return 'status-active';
-    case '已结束': return 'status-finished';
-    default: return '';
+const handleSignup = async () => {
+  if (!confirm('确定要报名参加这个活动吗？')) return;
+  
+  loading.value = true;
+  try {
+    await apiClient.post(`/events/${eventId}/signup`, {
+      studentId: store.user.id
+    });
+    alert('报名成功！');
+    // Reload to update status
+    const response = await apiClient.get(`/events/${eventId}`);
+    event.value = response.data;
+  } catch (error) {
+    alert(error.response?.data?.message || '报名失败');
+  } finally {
+    loading.value = false;
   }
 };
 </script>
 
 <style scoped>
-/* (大部分样式不变) */
-.event-container { max-width: 900px; margin: 0 auto; }
-.event-card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
-.event-content { padding: 24px; }
-h1 { margin-top: 0; }
-.registration-section { padding: 24px; background-color: #f8f9fa; border-top: 1px solid #e9ecef; }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
-.form-group input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em; box-sizing: border-box; }
-.register-button { display: block; width: 100%; padding: 16px; margin-top: 24px; background-color: #007bff; color: white; border: none; border-radius: 8px; font-size: 1.2em; cursor: pointer; }
-.register-button:disabled { background-color: #6c757d; cursor: not-allowed; }
-.error-message { color: #dc3545; background-color: #f8d7da; padding: 12px; border-radius: 6px; margin-top: 10px; text-align: center; }
-.success-message { color: #155724; background-color: #d4edda; padding: 20px; border-radius: 6px; text-align: center; font-size: 1.2em; font-weight: bold; }
-.loading-message { text-align: center; padding: 50px; font-size: 1.5em; color: #6c757d; }
-.welcome-back { background-color: #e9f5ff; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
-.button-group { display: flex; gap: 10px; margin-top: 20px; }
-.button-group .register-button, .button-group .secondary-button { width: 100%; margin-top: 0; }
-.secondary-button { background-color: #6c757d; color: white; border: none; border-radius: 8px; padding: 16px; font-size: 1.2em; cursor: pointer; }
-.form-hint { font-size: 0.8em; color: #6c757d; margin-top: 4px; }
-.grade-restriction { font-size: 0.9em; color: #495057; background-color: #e9ecef; padding: 8px 12px; border-radius: 6px; display: inline-block; }
+.detail-container {
+  max-width: 800px;
+}
 
-/* 【【【 新增：状态徽章和标题的样式 】】】 */
-.header-with-status {
+.detail-card {
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.header-section {
+  text-align: center;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 16px 0;
+  font-size: 2rem;
+}
+
+.meta-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap; /* 允许在小屏幕上换行 */
-  gap: 10px;
-  margin-bottom: 1rem;
+  justify-content: center;
+  gap: 24px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 }
-.status-badge {
-  display: inline-block;
-  padding: 6px 14px;
-  font-size: 0.9em;
-  font-weight: bold;
-  border-radius: 999px;
-  white-space: nowrap; /* 防止文字换行 */
+
+.content-section {
+  margin-bottom: 32px;
 }
-.status-recruiting { background-color: #dcfce7; color: #166534; }
-.status-full { background-color: #ffedd5; color: #9a3412; }
-.status-closed { background-color: #fee2e2; color: #991b1b; }
-.status-active { background-color: #dbeafe; color: #1e40af; }
-.status-finished { background-color: #e5e7eb; color: #4b5563; }
+
+.description {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  color: #374151;
+  margin-bottom: 24px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.value {
+  font-weight: 600;
+}
+
+.action-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.action-section button {
+  padding: 12px 48px;
+  font-size: 1.1rem;
+}
+
+.login-prompt {
+  text-align: center;
+}
+
+.login-prompt p {
+  margin-bottom: 12px;
+}
 </style>
