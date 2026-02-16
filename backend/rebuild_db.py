@@ -1,40 +1,47 @@
-# backend/init_db.py
+#!/usr/bin/env python3
+"""强制重建数据库脚本"""
+import os
+import sys
 
-from app import app, db, RecurringShift, Student
+# 删除旧数据库
+db_path = "instance/volunteer.db"
+if os.path.exists(db_path):
+    os.remove(db_path)
+    print(f"已删除旧数据库: {db_path}")
 
-def init_data():
-    with app.app_context():
-        # 1. 创建所有表
-        db.create_all()
-        print("数据库表结构创建成功。")
+# 导入应用
+from app import app, db, Student, RecurringShift
+from datetime import datetime
 
-        # Create Admin Student if not exists
-        if not Student.query.filter_by(phone='admin').first():
-            print("创建默认管理员账号...")
-            admin_student = Student(
-                name="管理员",
-                phone="admin",
-                password="admin123",  # 管理员默认密码
-                enrollment_year=2020,
-                class_number=0,
-                is_admin=True
-            )
-            db.session.add(admin_student)
-            db.session.commit()
-            print("默认管理员创建成功: admin / admin123")
-
-        # 2. 检查是否已经有周常数据
-        if RecurringShift.query.first():
-            print("周常岗位数据已存在，跳过初始化。")
-            return
-
-        # 3. 写入周常岗位数据
-        # 根据需求：
-        # - 周一：无文明礼仪站岗，只有食堂志愿
-        # - 周二到周四：正常时间
-        # - 周五：下午活动提前30分钟
-        # - 所有岗位容量统一为2人
-        
+# 创建应用上下文
+with app.app_context():
+    # 删除所有表
+    db.drop_all()
+    print("已删除所有旧表")
+    
+    # 重新创建所有表
+    db.create_all()
+    print("数据库表结构创建成功。")
+    
+    # 1. 创建默认管理员
+    admin_exists = Student.query.filter_by(phone="admin").first()
+    if not admin_exists:
+        admin_student = Student(
+            name="Admin",
+            phone="admin",
+            password="admin123",  # 管理员默认密码
+            enrollment_year=2020,
+            class_number=0,
+            is_admin=True
+        )
+        db.session.add(admin_student)
+        db.session.commit()
+        print("默认管理员创建成功: admin / admin123")
+    
+    # 2. 创建周常岗位数据
+    if RecurringShift.query.first():
+        print("周常岗位数据已存在，跳过初始化。")
+    else:
         shifts_data = []
         
         # 周二到周五：早上文明礼仪站岗 (7:35-7:55)
@@ -108,7 +115,6 @@ def init_data():
         })
         
         # 创建所有岗位
-        from datetime import datetime
         shifts = []
         for data in shifts_data:
             shift = RecurringShift(
@@ -131,5 +137,4 @@ def init_data():
         print("  - 周五：下午活动提前30分钟")
         print("  - 所有岗位容量：2人")
 
-if __name__ == "__main__":
-    init_data()
+print("\\n数据库初始化完成！")

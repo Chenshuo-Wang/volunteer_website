@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from sqlalchemy import func, case
 
 # --- 1. 基本配置 ---
@@ -186,23 +186,33 @@ class EventSignup(db.Model):
 # ==========================================
 
 class RecurringShift(db.Model):
+    """周常岗位模板 - 定义每周重复的固定岗位"""
     __tablename__ = 'recurring_shifts'
+    
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-    day_of_week = db.Column(db.Integer, nullable=False) 
-    start_time_str = db.Column(db.String(10), nullable=False)
-    end_time_str = db.Column(db.String(10), nullable=False)
-    capacity = db.Column(db.Integer, default=1)
-    hours_value = db.Column(db.Float, default=0.5)
+    name = db.Column(db.String(50), nullable=False)  # 岗位名称：食堂志愿/文明礼仪站岗
+    day_of_week = db.Column(db.Integer, nullable=False)  # 1-5 (周一到周五)
+    start_time = db.Column(db.Time, nullable=False)  # 开始时间
+    end_time = db.Column(db.Time, nullable=False)  # 结束时间
+    capacity = db.Column(db.Integer, default=2)  # 容量（每个岗位统一2人）
+    hours_value = db.Column(db.Float, default=0.5)  # 志愿时长（小时）
+    description = db.Column(db.String(200))  # 岗位描述（可选）
+    
+    # 关系
+    signups = db.relationship('ShiftSignup', backref='shift', lazy='dynamic', cascade='all, delete-orphan')
 
     def to_dict(self):
+        """转换为字典格式，供API返回"""
         return {
             "id": self.id,
             "name": self.name,
             "dayOfWeek": self.day_of_week,
-            "timeRange": f"{self.start_time_str} - {self.end_time_str}",
+            "startTime": self.start_time.strftime("%H:%M") if self.start_time else "",
+            "endTime": self.end_time.strftime("%H:%M") if self.end_time else "",
+            "timeRange": f"{self.start_time.strftime('%H:%M')} - {self.end_time.strftime('%H:%M')}" if self.start_time and self.end_time else "",
             "capacity": self.capacity,
-            "hoursValue": self.hours_value
+            "hoursValue": self.hours_value,
+            "description": self.description or ""
         }
 
 class WeeklyRotation(db.Model):
@@ -212,12 +222,31 @@ class WeeklyRotation(db.Model):
     assigned_class_str = db.Column(db.String(50), nullable=False)
 
 class ShiftSignup(db.Model):
+    """学生周常任务报名记录 - 记录具体日期的报名"""
     __tablename__ = 'shift_signups'
+    
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('students.id'))
-    shift_id = db.Column(db.Integer, db.ForeignKey('recurring_shifts.id'))
-    date = db.Column(db.Date, nullable=False) 
-    __table_args__ = (db.UniqueConstraint('shift_id', 'date', 'student_id'),)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    shift_id = db.Column(db.Integer, db.ForeignKey('recurring_shifts.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False)  # 具体日期
+    status = db.Column(db.String(20), default='pending')  # pending/completed/cancelled
+    created_at = db.Column(db.DateTime, default=datetime.now)  # 报名时间
+    
+    # 唯一约束：同一个岗位同一天同一个学生只能报名一次
+    __table_args__ = (
+        db.UniqueConstraint('shift_id', 'date', 'student_id', name='unique_shift_signup'),
+    )
+    
+    def to_dict(self):
+        """转换为字典格式"""
+        return {
+            "id": self.id,
+            "studentId": self.student_id,
+            "shiftId": self.shift_id,
+            "date": self.date.isoformat() if self.date else "",
+            "status": self.status,
+            "createdAt": self.created_at.isoformat() if self.created_at else ""
+        }
   
 # ==========================================
 # API 模块一：学生系统 (Student APIs)
@@ -529,6 +558,392 @@ def admin_create_event():
         return jsonify(new_event.to_dict()), 201
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+# ==========================================
+# API 模块四：周常任务系统 (Shift APIs)
+# ==========================================
+
+@app.route('/api/shifts/rotation', methods=['GET'])
+def get_current_rotation():
+    """公开接口：获取当前/指定周的轮值班级信息"""
+    date_str = request.args.get('date')
+    if date_str:
+        try:
+            target = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            target = date.today()
+    else:
+        target = date.today()
+    
+    # 计算该周周一
+    week_start = target - timedelta(days=target.weekday())
+    rotation = WeeklyRotation.query.filter_by(week_start_date=week_start).first()
+    
+    if rotation:
+        return jsonify({
+            "weekStartDate": rotation.week_start_date.isoformat(),
+            "assignedClass": rotation.assigned_class_str
+        })
+    else:
+        return jsonify({"weekStartDate": week_start.isoformat(), "assignedClass": None})
+
+@app.route('/api/shifts', methods=['GET'])
+def get_shifts():
+    """
+    获取所有周常岗位（按星期和时间排序）
+    返回格式：按周一到周五分组的岗位列表
+    """
+    shifts = RecurringShift.query.order_by(
+        RecurringShift.day_of_week, 
+        RecurringShift.start_time
+    ).all()
+    return jsonify([s.to_dict() for s in shifts])
+
+@app.route('/api/shifts/<int:shift_id>', methods=['GET'])
+def get_shift_detail(shift_id):
+    """获取单个岗位详情"""
+    shift = RecurringShift.query.get_or_404(shift_id)
+    return jsonify(shift.to_dict())
+
+@app.route('/api/shifts/<int:shift_id>/signup', methods=['POST'])
+def signup_shift(shift_id):
+    """
+    学生报名周常任务
+    请求体: { studentId: int, date: "2026-02-17" }
+    """
+    data = request.get_json()
+    
+    # 验证必填字段
+    if 'studentId' not in data or 'date' not in data:
+        return jsonify({"message": "缺少必填信息"}), 400
+    
+    # 验证岗位存在
+    shift = RecurringShift.query.get(shift_id)
+    if not shift:
+        return jsonify({"message": "岗位不存在"}), 404
+    
+    # 验证学生存在
+    student = Student.query.get(data['studentId'])
+    if not student:
+        return jsonify({"message": "学生不存在"}), 404
+    
+    # 解析日期
+    try:
+        signup_date = datetime.strptime(data['date'], "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"message": "日期格式错误，应为YYYY-MM-DD"}), 400
+    
+    # 验证日期是未来的日期
+    if signup_date < datetime.now().date():
+        return jsonify({"message": "不能报名过去的日期"}), 400
+    
+    # 验证日期的星期与岗位匹配（周一=1, 周二=2, ..., 周五=5）
+    # Python的weekday(): 周一=0, 周日=6，所以需要+1转换
+    weekday = signup_date.weekday() + 1
+    if weekday > 5:  # 周六周日
+        return jsonify({"message": "周常任务仅限工作日（周一到周五）"}), 400
+    
+    if weekday != shift.day_of_week:
+        day_names = {1: "周一", 2: "周二", 3: "周三", 4: "周四", 5: "周五"}
+        return jsonify({
+            "message": f"日期错误：该岗位是{day_names[shift.day_of_week]}的岗位，您选择的日期是{day_names[weekday]}"
+        }), 400
+    
+    # 检查是否已经报名
+    existing = ShiftSignup.query.filter_by(
+        shift_id=shift_id,
+        student_id=data['studentId'],
+        date=signup_date
+    ).first()
+    
+    if existing:
+        return jsonify({"message": "您已经报名过该岗位了"}), 400
+    
+    # 检查容量限制
+    signup_count = ShiftSignup.query.filter_by(
+        shift_id=shift_id,
+        date=signup_date
+    ).filter(ShiftSignup.status != 'cancelled').count()
+    
+    if signup_count >= shift.capacity:
+        return jsonify({"message": f"该岗位已满员（容量{shift.capacity}人）"}), 400
+    
+    # 计算该周的周一日期
+    week_start = signup_date - timedelta(days=signup_date.weekday())  # 该周周一
+    week_end = week_start + timedelta(days=4)  # 该周周五
+    
+    # 检查班级轮换限定：只有本周轮值班级的学生才能报名
+    rotation = WeeklyRotation.query.filter_by(week_start_date=week_start).first()
+    if not rotation:
+        return jsonify({"message": "该周尚未设置轮值班级，请联系管理员"}), 400
+    
+    student_class = f"{student.enrollment_year}-{student.class_number}"
+    if student_class != rotation.assigned_class_str:
+        return jsonify({
+            "message": f"本周轮值班级为 {rotation.assigned_class_str}，您的班级({student_class})不在轮值范围内"
+        }), 403
+    
+    # 检查每周报名次数限制（每人每周最多2个）
+    weekly_count = ShiftSignup.query.filter(
+        ShiftSignup.student_id == student.id,
+        ShiftSignup.date >= week_start,
+        ShiftSignup.date <= week_end,
+        ShiftSignup.status != 'cancelled'
+    ).count()
+    
+    if weekly_count >= 2:
+        return jsonify({"message": "每人每周最多报名2个周常项目"}), 400
+    
+    # 创建报名记录
+    signup = ShiftSignup(
+        student_id=data['studentId'],
+        shift_id=shift_id,
+        date=signup_date,
+        status='pending'
+    )
+    
+    db.session.add(signup)
+    db.session.commit()
+    
+    return jsonify({
+        "message": "报名成功！",
+        "signup": signup.to_dict()
+    }), 201
+
+@app.route('/api/shifts/my-signups', methods=['GET'])
+def get_my_shift_signups():
+    """
+    获取我的周常任务报名记录
+    参数: phone (query parameter)
+    """
+    phone = request.args.get('phone')
+    if not phone:
+        return jsonify({"message": "缺少手机号参数"}), 400
+    
+    student = Student.query.filter_by(phone=phone).first()
+    if not student:
+        return jsonify({"message": "学生不存在"}), 404
+    
+    # 获取该学生的所有报名记录
+    signups = ShiftSignup.query.filter_by(student_id=student.id).order_by(ShiftSignup.date.desc()).all()
+    
+    result = []
+    for signup in signups:
+        shift = RecurringShift.query.get(signup.shift_id)
+        result.append({
+            **signup.to_dict(),
+            "shiftName": shift.name if shift else "",
+            "shiftTime": shift.to_dict()['timeRange'] if shift else ""
+        })
+    
+    return jsonify(result)
+
+# ==========================================
+# 管理员API：周常岗位管理
+# ==========================================
+
+@app.route('/api/admin/shifts', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@admin_required
+def admin_manage_shifts():
+    """
+    管理员管理周常岗位
+    GET: 获取所有岗位
+    POST: 创建新岗位
+    PUT: 更新岗位
+    DELETE: 删除岗位
+    """
+    if request.method == 'GET':
+        shifts = RecurringShift.query.order_by(
+            RecurringShift.day_of_week,
+            RecurringShift.start_time
+        ).all()
+        return jsonify([s.to_dict() for s in shifts])
+    
+    elif request.method == 'POST':
+        # 创建新岗位
+        data = request.get_json()
+        try:
+            start_time = datetime.strptime(data['startTime'], "%H:%M").time()
+            end_time = datetime.strptime(data['endTime'], "%H:%M").time()
+            
+            shift = RecurringShift(
+                name=data['name'],
+                day_of_week=int(data['dayOfWeek']),
+                start_time=start_time,
+                end_time=end_time,
+                capacity=int(data.get('capacity', 2)),
+                hours_value=float(data.get('hoursValue', 0.5)),
+                description=data.get('description', '')
+            )
+            
+            db.session.add(shift)
+            db.session.commit()
+            
+            return jsonify({"message": "岗位创建成功", "shift": shift.to_dict()}), 201
+        except Exception as e:
+            return jsonify({"message": f"创建失败: {str(e)}"}), 500
+    
+    elif request.method == 'PUT':
+        # 更新岗位
+        data = request.get_json()
+        shift_id = data.get('id')
+        if not shift_id:
+            return jsonify({"message": "缺少岗位ID"}), 400
+        
+        shift = RecurringShift.query.get(shift_id)
+        if not shift:
+            return jsonify({"message": "岗位不存在"}), 404
+        
+        try:
+            if 'name' in data:
+                shift.name = data['name']
+            if 'dayOfWeek' in data:
+                shift.day_of_week = int(data['dayOfWeek'])
+            if 'startTime' in data:
+                shift.start_time = datetime.strptime(data['startTime'], "%H:%M").time()
+            if 'endTime' in data:
+                shift.end_time = datetime.strptime(data['endTime'], "%H:%M").time()
+            if 'capacity' in data:
+                shift.capacity = int(data['capacity'])
+            if 'hoursValue' in data:
+                shift.hours_value = float(data['hoursValue'])
+            if 'description' in data:
+                shift.description = data['description']
+            
+            db.session.commit()
+            return jsonify({"message": "岗位更新成功", "shift": shift.to_dict()})
+        except Exception as e:
+            return jsonify({"message": f"更新失败: {str(e)}"}), 500
+    
+    elif request.method == 'DELETE':
+        # 删除岗位
+        shift_id = request.args.get('id')
+        if not shift_id:
+            return jsonify({"message": "缺少岗位ID"}), 400
+        
+        shift = RecurringShift.query.get(shift_id)
+        if not shift:
+            return jsonify({"message": "岗位不存在"}), 404
+        
+        db.session.delete(shift)
+        db.session.commit()
+        
+        return jsonify({"message": "岗位删除成功"})
+
+@app.route('/api/admin/shifts/signups', methods=['GET'])
+@admin_required
+def admin_get_shift_signups():
+    """
+    管理员查看报名情况 - 返回二维矩阵数据
+    参数: 
+      - week_start: 周一日期（必填，YYYY-MM-DD）
+      - class_name: 班级名称（可选筛选）
+    返回: { columns: [...岗位], rows: [...学生及其报名状态] }
+    """
+    week_start_str = request.args.get('week_start')
+    class_filter = request.args.get('class_name', '')
+    
+    if not week_start_str:
+        return jsonify({"message": "请提供week_start参数（周一日期）"}), 400
+    
+    try:
+        week_start = datetime.strptime(week_start_str, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"message": "日期格式错误"}), 400
+    
+    week_end = week_start + timedelta(days=4)  # 周五
+    
+    # 获取该周所有岗位（按星期和时间排序）
+    shifts = RecurringShift.query.order_by(
+        RecurringShift.day_of_week, RecurringShift.start_time
+    ).all()
+    
+    day_names = {1: "周一", 2: "周二", 3: "周三", 4: "周四", 5: "周五"}
+    
+    # 构建列：每个岗位一列
+    columns = []
+    for s in shifts:
+        columns.append({
+            "id": s.id,
+            "label": f"{s.name} {s.start_time.strftime('%H:%M')}({day_names[s.day_of_week]})"
+        })
+    
+    # 获取该周所有报名记录
+    signups = ShiftSignup.query.filter(
+        ShiftSignup.date >= week_start,
+        ShiftSignup.date <= week_end,
+        ShiftSignup.status != 'cancelled'
+    ).all()
+    
+    # 按学生聚合
+    student_signup_map = {}  # {student_id: {shift_id: status}}
+    for signup in signups:
+        if signup.student_id not in student_signup_map:
+            student_signup_map[signup.student_id] = {}
+        student_signup_map[signup.student_id][signup.shift_id] = signup.status
+    
+    # 获取所有相关学生信息
+    student_ids = list(student_signup_map.keys())
+    
+    # 如果指定了班级筛选，加载该班级所有学生（含未报名的）
+    if class_filter:
+        parts = class_filter.split('-')
+        if len(parts) == 2:
+            try:
+                year = int(parts[0])
+                cls = int(parts[1])
+                all_students_in_class = Student.query.filter_by(
+                    enrollment_year=year, class_number=cls, is_admin=False
+                ).all()
+                # 合并：已报名 + 未报名的该班级学生
+                for stu in all_students_in_class:
+                    if stu.id not in student_signup_map:
+                        student_signup_map[stu.id] = {}
+                student_ids = list(student_signup_map.keys())
+            except ValueError:
+                pass
+    
+    students = Student.query.filter(Student.id.in_(student_ids)).all() if student_ids else []
+    student_info = {s.id: s for s in students}
+    
+    # 如果有班级筛选，只保留该班级的学生
+    if class_filter:
+        filtered_ids = [
+            sid for sid in student_ids 
+            if sid in student_info and student_info[sid].full_class_name == class_filter
+        ]
+    else:
+        filtered_ids = student_ids
+    
+    # 构建行
+    rows = []
+    for sid in filtered_ids:
+        stu = student_info.get(sid)
+        if not stu:
+            continue
+        signup_data = student_signup_map.get(sid, {})
+        rows.append({
+            "studentId": sid,
+            "name": stu.name,
+            "class": stu.full_class_name,
+            "signups": {str(s.id): signup_data.get(s.id) for s in shifts}
+        })
+    
+    # 按名字排序
+    rows.sort(key=lambda r: r['name'])
+    
+    # 获取所有班级列表（供前端下拉框用）
+    all_classes = db.session.query(
+        Student.enrollment_year, Student.class_number
+    ).filter(Student.is_admin == False).distinct().all()
+    class_list = sorted([f"{y}-{c}" for y, c in all_classes])
+    
+    return jsonify({
+        "columns": columns,
+        "rows": rows,
+        "classList": class_list,
+        "weekStart": week_start_str
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
