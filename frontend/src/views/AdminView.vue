@@ -219,43 +219,7 @@
           </div>
         </div>
 
-        <hr style="margin: 24px 0; border-color: #e5e7eb;" />
 
-        <!-- 区域3: 所有岗位列表 -->
-        <div class="section-block">
-          <div class="flex-between" style="margin-bottom: 16px;">
-            <h3>📋 所有周常岗位（共 {{ allShifts.length }} 个）</h3>
-            <button @click="loadAllShifts" class="btn-sm btn-secondary">刷新</button>
-          </div>
-          
-          <div v-if="loadingShifts" class="loading-state">
-            <div class="spinner"></div>
-            <p>加载中...</p>
-          </div>
-          
-          <div v-else class="shifts-grid">
-            <div v-for="shift in allShifts" :key="shift.id" class="shift-admin-card glass-panel">
-              <div class="shift-header">
-                <span class="shift-name">{{ shift.name }}</span>
-                <span class="shift-day-badge">{{ getDayName(shift.dayOfWeek) }}</span>
-              </div>
-              <div class="shift-details">
-                <div class="detail-row">
-                  <span class="icon">🕒</span>
-                  <span>{{ shift.timeRange }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="icon">👥</span>
-                  <span>容量: {{ shift.capacity }} 人</span>
-                </div>
-                <div v-if="shift.description" class="detail-row">
-                  <span class="icon">💡</span>
-                  <span class="description">{{ shift.description }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
     </div>
