@@ -1,6 +1,5 @@
-# Vercel Serverless 函数所需的后端依赖 (从 backend/复制过来)
 Flask==3.0.0
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.5
 Flask-Cors==4.0.0
-psycopg2-binary==2.9.9
+pg8000==1.31.2
