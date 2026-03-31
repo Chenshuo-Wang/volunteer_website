@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  // Vercel Serverless 统一部署模式下，前后端在同一个域名，直接使用相对路径 /api
+  baseURL: import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
