@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import EventList from '../views/EventList.vue'
@@ -11,7 +10,8 @@ import { store } from '../store'
 
 
 const routes = [
-  { path: '/', name: 'Home', component: HomeView },
+  // 访问根路径直接跳转到活动列表
+  { path: '/', redirect: '/events' },
   { path: '/login', name: 'Login', component: LoginView },
   { path: '/register', name: 'Register', component: RegisterView },
   { path: '/events', name: 'EventList', component: EventList },
@@ -40,11 +40,11 @@ router.beforeEach((to, from, next) => {
   // 1. 检查管理员权限
   if (to.meta.requiresAdmin) {
     if (!store.user?.isAdmin) {
-      return next({ name: 'Home' }); // 或 Login，视需求定
+      return next({ name: 'EventList' }); // 无管理员权限则跳转活动列表
     }
   }
 
-  // 2. 检查普通用户权限
+  // 2. 检查普通用户登录权限
   if (to.meta.requiresAuth && !store.user) {
     next({ name: 'Login' });
   } else {
