@@ -18,7 +18,29 @@ if DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
     elif DATABASE_URL.startswith("postgresql://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
+    
+    # pg8000 不识别 URL 中的 sslmode 参数，需要移除并通过 connect_args 设置 SSL
+    import ssl
+    from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+    
+    parsed = urlparse(DATABASE_URL)
+    query_params = parse_qs(parsed.query)
+    needs_ssl = query_params.pop('sslmode', [None])[0] in ('require', 'verify-ca', 'verify-full', 'prefer')
+    
+    # 移除 sslmode 后重新构建 URL
+    new_query = urlencode({k: v[0] for k, v in query_params.items()})
+    DATABASE_URL = urlunparse(parsed._replace(query=new_query))
+    
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    
+    # 为 pg8000 设置 SSL 上下文
+    if needs_ssl or 'neon' in DATABASE_URL.lower():
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'connect_args': {'ssl_context': ssl_context}
+        }
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'volunteer.db')
 
