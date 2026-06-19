@@ -2,7 +2,6 @@ import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from datetime import datetime, date, timedelta
 from sqlalchemy import func, case
 
@@ -26,7 +25,6 @@ else:
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
 # ==========================================
 # 模块一：用户系统 (Student)
