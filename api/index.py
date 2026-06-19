@@ -11,19 +11,22 @@ try:
     with app.app_context():
         db.create_all()
 except Exception as e:
-    # 如果导入或建表失败，创建一个最小的 fallback app 返回错误信息
-    # 这样至少能在浏览器中看到具体错误，方便调试
+    import traceback
     from flask import Flask, jsonify
     app = Flask(__name__)
     error_message = str(e)
+    error_traceback = traceback.format_exc()
 
-    @app.route('/', defaults={'path': ''})
-    @app.route('/<path:path>')
+    @app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+    @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
     def catch_all(path):
         return jsonify({
             "error": "Backend initialization failed",
             "detail": error_message,
-            "python_version": sys.version
+            "traceback": error_traceback,
+            "python_version": sys.version,
+            "cwd": os.getcwd(),
+            "api_dir": os.path.dirname(__file__),
+            "parent_dir_contents": os.listdir(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))),
+            "backend_exists": os.path.isdir(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend')))
         }), 500
-
-# Vercel 需要导出名为 `app` 的 WSGI 应用
