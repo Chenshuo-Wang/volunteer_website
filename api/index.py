@@ -8,13 +8,20 @@ if root_dir not in sys.path:
 
 try:
     from backend.app import app, db
+    try:
+        from backend.init_db import init_data
+    except Exception as e:
+        print(f"[WARNING] Could not import init_data: {e}")
+        init_data = None
 
-    # Vercel Serverless 环境下自动建表（若失败仅记录日志，不阻断 app）
+    # Vercel Serverless 环境下自动建表与初始化默认数据（管理员账号、周常岗位等）
     try:
         with app.app_context():
             db.create_all()
+            if init_data:
+                init_data()
     except Exception as db_err:
-        print(f"[WARNING] db.create_all() failed: {db_err}")
+        print(f"[WARNING] Database initialization failed: {db_err}")
 
 except Exception as e:
     import traceback

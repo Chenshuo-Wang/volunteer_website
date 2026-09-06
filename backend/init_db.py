@@ -1,6 +1,7 @@
-# backend/init_db.py
-
-from app import app, db, RecurringShift, Student
+try:
+    from backend.app import app, db, RecurringShift, Student
+except ImportError:
+    from app import app, db, RecurringShift, Student
 
 def init_data():
     with app.app_context():

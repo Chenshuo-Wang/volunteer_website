@@ -7,46 +7,132 @@ from sqlalchemy import func, case
 
 # --- 1. 基本配置 ---
 app = Flask(__name__)
-CORS(app)
+app.url_map.strict_slashes = False
+
+# 允许跨域请求并支持自定义头部 X-Admin-Token
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True, allow_headers=["Content-Type", "X-Admin-Token", "Authorization"])
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
-    # 兼容 Neon/Heroku 等平台提供的连接字符串格式
+    # 标准化 postgres:// 为 postgresql://
     if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
-    elif DATABASE_URL.startswith("postgresql://"):
-        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     
-    # pg8000 不识别 URL 中的 sslmode 参数，需要移除并通过 connect_args 设置 SSL
-    import ssl
-    from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
-    
-    parsed = urlparse(DATABASE_URL)
-    query_params = parse_qs(parsed.query)
-    needs_ssl = query_params.pop('sslmode', [None])[0] in ('require', 'verify-ca', 'verify-full', 'prefer')
-    
-    # 移除 sslmode 后重新构建 URL
-    new_query = urlencode({k: v[0] for k, v in query_params.items()})
-    DATABASE_URL = urlunparse(parsed._replace(query=new_query))
-    
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-    
-    # 为 pg8000 设置 SSL 上下文
-    if needs_ssl or 'neon' in DATABASE_URL.lower():
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
+    # 检测运行环境驱动：优先检查是否有 psycopg2，否则使用 pg8000 (针对 Vercel Serverless)
+    try:
+        import psycopg2
+        use_pg8000 = False
+    except ImportError:
+        use_pg8000 = True
+
+    if use_pg8000:
+        if not DATABASE_URL.startswith("postgresql+pg8000://"):
+            DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
+        
+        import ssl
+        from urllib.parse import urlparse, parse_qs, urlunparse
+        
+        parsed = urlparse(DATABASE_URL)
+        query_params = parse_qs(parsed.query)
+        needs_ssl = True
+        if 'sslmode' in query_params:
+            needs_ssl = query_params['sslmode'][0] in ('require', 'verify-ca', 'verify-full', 'prefer')
+        
+        # 移除 query 中的额外参数，避免 pg8000 connect() 报 unexpected keyword argument 错误
+        DATABASE_URL = urlunparse(parsed._replace(query=""))
+        app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+        
+        engine_options = {
+            'pool_pre_ping': True,
+            'pool_recycle': 300,
+        }
+        if needs_ssl or any(k in DATABASE_URL.lower() for k in ['neon', 'supabase', 'pooler', 'aws']):
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            engine_options['connect_args'] = {'ssl_context': ssl_context}
+        
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
         app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-            'connect_args': {'ssl_context': ssl_context}
+            'pool_pre_ping': True,
+            'pool_recycle': 300,
         }
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'volunteer.db')
+    # 如果处于 Vercel / Lambda 等 Serverless 环境但未提供 DATABASE_URL，退回到系统临时目录（只读文件系统中唯独 temp 目录可写）
+    # 注意：Serverless 的 temp 是临时的，生产持久化必须配置外部数据库如 Neon / Supabase PostgreSQL
+    if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+        import tempfile
+        db_path = os.path.join(tempfile.gettempdir(), 'volunteer.db')
+    else:
+        db_path = os.path.join(basedir, 'volunteer.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+# --- 全局异常处理与健康检查路由 ---
+@app.errorhandler(Exception)
+def handle_exception(e):
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return jsonify({"message": e.description, "error": e.name}), e.code
+    import traceback
+    error_detail = str(e)
+    trace = traceback.format_exc()
+    print(f"[ERROR] Unhandled Exception: {error_detail}\n{trace}")
+    return jsonify({
+        "message": f"服务器内部错误: {error_detail}",
+        "error": error_detail,
+        "traceback": trace if os.environ.get('VERCEL_ENV') != 'production' else None
+    }), 500
+
+@app.route('/', methods=['GET'])
+@app.route('/api', methods=['GET'])
+@app.route('/api/', methods=['GET'])
+def api_index():
+    return jsonify({
+        "status": "ok",
+        "message": "Volunteer Website Backend API is running",
+        "health": "/api/health"
+    })
+
+@app.route('/api/health', methods=['GET'])
+@app.route('/api/ping', methods=['GET'])
+def health_check():
+    db_status = "unknown"
+    db_type = "sqlite" if "sqlite" in app.config['SQLALCHEMY_DATABASE_URI'] else "postgres"
+    warning = None
+    try:
+        from sqlalchemy import text
+        db.session.execute(text('SELECT 1'))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    if db_type == "sqlite" and (os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')):
+        warning = "Running on ephemeral /tmp SQLite in Serverless. For persistent production data, please configure DATABASE_URL in Vercel Environment Variables."
+
+    response_data = {
+        "status": "healthy" if db_status == "connected" else "database_error",
+        "database": {
+            "type": db_type,
+            "status": db_status,
+            "is_postgres": bool(DATABASE_URL),
+        },
+        "environment": "vercel" if os.environ.get('VERCEL') else "local"
+    }
+    if warning:
+        response_data["database"]["warning"] = warning
+
+    status_code = 200 if db_status == "connected" else 503
+    return jsonify(response_data), status_code
+
 
 # ==========================================
 # 模块一：用户系统 (Student)
@@ -558,10 +644,7 @@ def get_all_students_stats():
     student_list.sort(key=lambda x: x['totalHours'], reverse=True)
     return jsonify(student_list)
 
-@app.route('/api/admin/events', methods=['POST'])
-@admin_required
-def admin_create_event():
-    data = request.get_json()
+def _process_create_event(data):
     try:
         new_event = Event(
             title=data['title'],
@@ -572,7 +655,7 @@ def admin_create_event():
             location=data['location'],
             required_volunteers=int(data['requiredVolunteers']),
             hours_value=float(data.get('hoursValue', 1.0)),
-            grade_limit=data.get('gradeLimit', 'ALL'), # 默认为 ALL
+            grade_limit=data.get('gradeLimit', data.get('gradeRestriction', 'ALL')), # 兼容 gradeLimit 与 gradeRestriction
             leader_name=data.get('leaderName'),
             leader_contact=data.get('leaderContact')
         )
@@ -580,7 +663,20 @@ def admin_create_event():
         db.session.commit()
         return jsonify(new_event.to_dict()), 201
     except Exception as e:
+        db.session.rollback()
         return jsonify({"message": str(e)}), 500
+
+@app.route('/api/admin/events', methods=['POST'])
+@admin_required
+def admin_create_event():
+    data = request.get_json()
+    return _process_create_event(data)
+
+@app.route('/api/events', methods=['POST'])
+def public_create_event():
+    data = request.get_json()
+    return _process_create_event(data)
+
 
 # ==========================================
 # API 模块四：周常任务系统 (Shift APIs)
