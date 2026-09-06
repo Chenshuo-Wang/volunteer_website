@@ -219,7 +219,7 @@ adminRouter.get('/shifts/signups', async (c) => {
       const year = parseInt(parts[0], 10);
       const cls = parseInt(parts[1], 10);
       const allStudentsInClass = await db.query(
-        'SELECT * FROM students WHERE enrollment_year = ? AND class_number = ? AND is_admin = 0',
+        'SELECT * FROM students WHERE enrollment_year = ? AND class_number = ? AND is_admin = FALSE',
         [year, cls]
       );
       for (const stu of allStudentsInClass) {
@@ -278,7 +278,7 @@ adminRouter.get('/shifts/signups', async (c) => {
 
   // 获取所有班级列表（供前端下拉框用）
   const classes = await db.query(
-    'SELECT DISTINCT enrollment_year, class_number FROM students WHERE is_admin = 0 ORDER BY enrollment_year ASC, class_number ASC'
+    'SELECT DISTINCT enrollment_year, class_number FROM students WHERE is_admin = FALSE ORDER BY enrollment_year ASC, class_number ASC'
   );
   const classList = classes.map((c) => `${c.enrollment_year}-${c.class_number}`);
 

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { trimTrailingSlash } from 'hono/trailing-slash';
 import { errorHandler } from './middleware/error.js';
 import healthRouter from './routes/health.js';
 import studentsRouter from './routes/students.js';
@@ -9,6 +10,9 @@ import adminRouter from './routes/admin.js';
 
 export function createApp() {
   const app = new Hono();
+
+  // 0. 自动修剪尾部斜杠，防止 /api/health/ 等请求返回 404
+  app.use(trimTrailingSlash());
 
   // 1. 全局跨域中间件（支持前端 Ajax、Vue 以及自定义请求头 X-Admin-Token）
   app.use(
