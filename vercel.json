@@ -1,10 +1,6 @@
 {
-  "framework": null,
-  "functions": {
-    "api/index.py": {
-      "includeFiles": "backend/**"
-    }
-  },
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -16,3 +12,4 @@
     }
   ]
 }
+
