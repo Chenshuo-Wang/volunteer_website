@@ -2,7 +2,7 @@
   "name": "volunteer-website",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build && cd .. && node -e \"const fs=require('fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.cpSync('frontend/dist','dist',{recursive:true}); fs.rmSync('public',{recursive:true,force:true}); fs.cpSync('frontend/dist','public',{recursive:true});\"",
-    "vercel-build": "cd frontend && npm install && npm run build && cd .. && node -e \"const fs=require('fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.cpSync('frontend/dist','dist',{recursive:true}); fs.rmSync('public',{recursive:true,force:true}); fs.cpSync('frontend/dist','public',{recursive:true});\""
+    "build": "node build.js",
+    "vercel-build": "node build.js"
   }
 }

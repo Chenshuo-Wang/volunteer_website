@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build && cd .. && node -e \"const fs=require('fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.cpSync('frontend/dist','dist',{recursive:true}); fs.rmSync('public',{recursive:true,force:true}); fs.cpSync('frontend/dist','public',{recursive:true});\"",
+  "buildCommand": "node build.js",
   "outputDirectory": "dist",
   "env": {
     "PYTHONPATH": "."
