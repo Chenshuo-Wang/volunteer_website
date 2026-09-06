@@ -1,8 +1,17 @@
 {
   "name": "volunteer-website",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
+    "dev:server": "node server/dev.js",
+    "start": "node server/dev.js",
     "build": "node build.js",
     "vercel-build": "node build.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "dotenv": "^17.4.2",
+    "hono": "^4.13.7",
+    "pg": "^8.23.0"
   }
 }
