@@ -62,13 +62,22 @@ if DATABASE_URL:
             'pool_recycle': 300,
         }
 else:
-    # 如果处于 Vercel / Lambda 等 Serverless 环境但未提供 DATABASE_URL，退回到系统临时目录（只读文件系统中唯独 temp 目录可写）
-    # 注意：Serverless 的 temp 是临时的，生产持久化必须配置外部数据库如 Neon / Supabase PostgreSQL
-    if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
-        import tempfile
-        db_path = os.path.join(tempfile.gettempdir(), 'volunteer.db')
-    else:
+    # 自动探测只读环境（如 Vercel Serverless / Lambda 等）：若当前目录不可写，退回到系统临时目录
+    import tempfile
+    is_writable = False
+    try:
+        test_file = os.path.join(basedir, '.perm_test')
+        with open(test_file, 'w') as f:
+            f.write('1')
+        os.remove(test_file)
+        is_writable = True
+    except Exception:
+        is_writable = False
+
+    if is_writable and not (os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')):
         db_path = os.path.join(basedir, 'volunteer.db')
+    else:
+        db_path = os.path.join(tempfile.gettempdir(), 'volunteer.db')
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 
 
