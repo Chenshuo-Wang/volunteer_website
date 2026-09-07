@@ -160,44 +160,46 @@ const handlePublish = async () => {
 .publish-container {
   max-width: 800px;
   margin: 40px auto;
-  padding: 30px;
-  background-color: #fff;
-  border-radius: 12px;
-  border: 1px solid rgba(69, 196, 176, 0.3);
-  box-shadow: 0 8px 32px rgba(1, 32, 48, 0.08);
+  padding: 36px;
+  background-color: #ffffff;
+  border-radius: 2px;
+  border: 2px solid #012030;
+  box-shadow: 6px 6px 0px #012030;
 }
-h1 { color: #012030; }
+h1 { color: #012030; font-weight: 900; letter-spacing: -0.01em; }
 .password-gate { text-align: center; padding: 40px; }
 .password-input {
   font-size: 1.2em;
-  padding: 10px;
+  padding: 10px 12px;
   margin-bottom: 20px;
   width: 100%;
   max-width: 300px;
   box-sizing: border-box;
-  border: 1px solid rgba(19, 103, 138, 0.25);
-  border-radius: 6px;
+  border: 2px solid #012030;
+  border-radius: 2px;
   color: #012030;
+  font-weight: 600;
 }
 .password-input:focus {
-  border-color: #45C4B0;
-  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.2);
+  border-color: #012030;
+  box-shadow: 3px 3px 0px #45C4B0;
   outline: none;
 }
 .form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #012030; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 800; color: #012030; }
 .form-group input, .form-group textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid rgba(19, 103, 138, 0.25);
-  border-radius: 6px;
+  border: 2px solid #012030;
+  border-radius: 2px;
   font-size: 1em;
+  font-weight: 600;
   color: #012030;
   box-sizing: border-box;
 }
 .form-group input:focus, .form-group textarea:focus {
-  border-color: #45C4B0;
-  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.2);
+  border-color: #012030;
+  box-shadow: 3px 3px 0px #45C4B0;
   outline: none;
 }
 .form-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
@@ -205,49 +207,64 @@ h1 { color: #012030; }
 .submit-button {
   width: 100%;
   padding: 15px;
-  background: linear-gradient(135deg, #13678A, #45C4B0);
-  color: white;
-  border: none;
-  border-radius: 8px;
+  background: #45C4B0;
+  color: #012030;
+  border: 2px solid #012030;
+  border-radius: 2px;
   font-size: 1.2em;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(19, 103, 138, 0.25);
+  transition: all 0.15s;
+  box-shadow: 4px 4px 0px #012030;
 }
 .submit-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #012030, #13678A);
-  transform: translateY(-2px);
+  background: #9AEBA3;
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0px #012030;
 }
-.submit-button:disabled { background: #9AEBA3; color: #012030; cursor: not-allowed; }
+.submit-button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #012030;
+}
+.submit-button:disabled {
+  background: #9AEBA3;
+  color: #012030;
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: 2px 2px 0px #012030;
+}
 .error-message {
   color: #012030;
   background: rgba(1, 32, 48, 0.08);
-  border: 1px solid #13678A;
+  border: 2px solid #012030;
   padding: 10px;
-  border-radius: 6px;
+  border-radius: 2px;
+  font-weight: 700;
+  box-shadow: 2px 2px 0px #012030;
   margin-top: 10px;
 }
 .success-message {
   color: #012030;
   background: #DAFDBA;
-  border: 1px solid #45C4B0;
+  border: 2px solid #012030;
   font-size: 1.2em;
-  font-weight: 600;
+  font-weight: 800;
   text-align: center;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
 }
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
   background-color: #DAFDBA;
-  border: 1px solid rgba(69, 196, 176, 0.3);
+  border: 2px solid #012030;
   padding: 15px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 .checkbox-item { display: flex; align-items: center; }
 .checkbox-item input[type="checkbox"] { width: auto; margin-right: 8px; width: 1.2em; height: 1.2em; }
-.checkbox-item label { font-weight: normal; margin-bottom: 0; cursor: pointer; color: #012030; }
+.checkbox-item label { font-weight: 700; margin-bottom: 0; cursor: pointer; color: #012030; }
 </style>

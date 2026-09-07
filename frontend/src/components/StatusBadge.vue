@@ -29,18 +29,19 @@ const statusClass = computed(() => {
 <style scoped>
 .status-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 99px;
+  padding: 3px 8px;
+  border-radius: 2px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  box-shadow: 1.5px 1.5px 0px #012030;
 }
 
-.status-recruiting { background-color: #DAFDBA; color: #012030; border: 1px solid #45C4B0; }
-.status-active { background-color: #45C4B0; color: #012030; }
-.status-full { background-color: #9AEBA3; color: #012030; border: 1px solid rgba(19, 103, 138, 0.2); }
-.status-closed { background-color: rgba(1, 32, 48, 0.08); color: #13678A; border: 1px solid rgba(19, 103, 138, 0.2); }
-.status-finished { background-color: rgba(1, 32, 48, 0.08); color: #13678A; }
-.status-default { background-color: rgba(1, 32, 48, 0.08); color: #13678A; }
+.status-recruiting { background-color: #DAFDBA; color: #012030; border: 1.5px solid #012030; }
+.status-active { background-color: #45C4B0; color: #012030; border: 1.5px solid #012030; }
+.status-full { background-color: #9AEBA3; color: #012030; border: 1.5px solid #012030; }
+.status-closed { background-color: rgba(1, 32, 48, 0.08); color: #012030; border: 1.5px solid #012030; }
+.status-finished { background-color: rgba(1, 32, 48, 0.08); color: #13678A; border: 1.5px solid #13678A; }
+.status-default { background-color: rgba(1, 32, 48, 0.08); color: #13678A; border: 1.5px solid #13678A; }
 </style>

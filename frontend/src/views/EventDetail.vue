@@ -129,14 +129,15 @@ const handleSignup = async () => {
 
 .detail-card {
   padding: 40px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(69, 196, 176, 0.3);
-  box-shadow: 0 12px 32px rgba(1, 32, 48, 0.08);
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 6px 6px 0px #012030;
 }
 
 .header-section {
   text-align: center;
-  border-bottom: 1px solid rgba(19, 103, 138, 0.15);
+  border-bottom: 2px solid #012030;
   padding-bottom: 24px;
   margin-bottom: 24px;
 }
@@ -144,6 +145,8 @@ const handleSignup = async () => {
 .title {
   margin: 16px 0;
   font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
   color: #012030;
 }
 
@@ -152,6 +155,7 @@ const handleSignup = async () => {
   justify-content: center;
   gap: 24px;
   color: #13678A;
+  font-weight: 600;
   font-size: 0.95rem;
 }
 
@@ -159,10 +163,16 @@ const handleSignup = async () => {
   margin-bottom: 32px;
 }
 
+.content-section h3 {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
 .description {
   white-space: pre-wrap;
   line-height: 1.8;
   color: #012030;
+  font-weight: 500;
   margin-bottom: 24px;
 }
 
@@ -170,10 +180,11 @@ const handleSignup = async () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
-  background: rgba(218, 253, 186, 0.3);
-  border: 1px solid rgba(69, 196, 176, 0.3);
+  background: #DAFDBA;
+  border: 2px solid #012030;
+  box-shadow: 3px 3px 0px #012030;
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 2px;
 }
 
 .info-item {
@@ -183,13 +194,15 @@ const handleSignup = async () => {
 
 .label {
   font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   color: #13678A;
   margin-bottom: 4px;
 }
 
 .value {
   color: #012030;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .action-section {
@@ -199,7 +212,7 @@ const handleSignup = async () => {
 }
 
 .action-section button {
-  padding: 12px 48px;
+  padding: 14px 48px;
   font-size: 1.1rem;
 }
 

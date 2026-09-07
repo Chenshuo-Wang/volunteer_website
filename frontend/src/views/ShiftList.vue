@@ -308,11 +308,19 @@ const getStatusText = (status) => {
   margin-right: auto;
 }
 
+.date-selector {
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
+  background: #ffffff;
+}
+
 .date-selector input[type="date"] {
   padding: 8px 12px;
-  border: 2px solid #13678A;
-  border-radius: 8px;
+  border: 2px solid #012030;
+  border-radius: 2px;
   font-size: 1rem;
+  font-weight: 700;
   color: #012030;
   min-width: 200px;
 }
@@ -320,7 +328,7 @@ const getStatusText = (status) => {
 .date-hint {
   color: #13678A;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .shifts-grid {
@@ -332,46 +340,52 @@ const getStatusText = (status) => {
 
 .shift-card {
   padding: 20px;
-  transition: all 0.3s;
-  border: 1px solid rgba(69, 196, 176, 0.25);
-  border-left: 4px solid #45C4B0;
+  transition: transform 0.15s, box-shadow 0.15s;
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-left: 6px solid #45C4B0;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
   position: relative;
   overflow: hidden;
 }
 
 .shift-card.shift-canteen {
-  border-left-color: #45C4B0; /* 薄荷青 - 食堂 */
+  border-left: 6px solid #45C4B0; /* 薄荷青 - 食堂 */
 }
 
 .shift-card.shift-etiquette {
-  border-left-color: #13678A; /* 海蓝 - 文明礼仪 */
+  border-left: 6px solid #13678A; /* 海蓝 - 文明礼仪 */
 }
 
 .shift-card:hover {
-  transform: translateY(-4px);
-  border-color: #45C4B0;
-  box-shadow: 0 8px 20px rgba(1, 32, 48, 0.1);
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px #012030;
 }
 
 .shift-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 600;
+  font-weight: 800;
   margin-bottom: 12px;
   font-size: 1.1rem;
 }
 
 .shift-name {
   color: #012030;
+  font-weight: 800;
 }
 
 .shift-hours {
   font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
   background: #13678A;
   color: white;
+  border: 1px solid #012030;
   padding: 4px 8px;
-  border-radius: 12px;
+  border-radius: 2px;
 }
 
 .shift-info {
@@ -383,6 +397,7 @@ const getStatusText = (status) => {
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
+  font-weight: 600;
   color: #13678A;
   margin-bottom: 6px;
 }
@@ -394,20 +409,22 @@ const getStatusText = (status) => {
 .description {
   font-size: 0.85rem;
   font-style: italic;
+  color: #012030;
 }
 
 .capacity-bar {
-  height: 6px;
+  height: 8px;
   background: #DAFDBA;
-  border-radius: 3px;
+  border: 1.5px solid #012030;
+  border-radius: 0;
   margin: 12px 0;
   overflow: hidden;
 }
 
 .capacity-fill {
   height: 100%;
-  background: linear-gradient(90deg, #9AEBA3, #45C4B0);
-  transition: width 0.3s;
+  background: #45C4B0;
+  transition: width 0.2s;
 }
 
 .capacity-fill.full {
@@ -419,34 +436,41 @@ const getStatusText = (status) => {
   margin-top: 8px;
   padding: 10px;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .rotation-banner {
   text-align: center;
-  background: linear-gradient(135deg, #DAFDBA 0%, rgba(154, 235, 163, 0.5) 100%);
+  background: #DAFDBA;
   color: #012030;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 2px;
   margin-bottom: 24px;
-  font-weight: 500;
-  border: 2px solid #45C4B0;
-  box-shadow: 0 4px 16px rgba(1, 32, 48, 0.08);
+  font-weight: 700;
+  border: 2px solid #012030;
+  box-shadow: 4px 4px 0px #012030;
 }
 
 .highlight-class {
   font-weight: 800;
-  color: #13678A;
+  color: #012030;
+  background: #9AEBA3;
+  padding: 2px 8px;
+  border: 1.5px solid #012030;
+  border-radius: 2px;
+  box-shadow: 1.5px 1.5px 0px #012030;
   font-size: 1.1rem;
 }
 
 .notice-box {
   text-align: center;
   padding: 40px 20px;
-  background: rgba(218, 253, 186, 0.35);
-  border: 1px solid #9AEBA3;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
   color: #012030;
+  font-weight: 600;
 }
 
 .notice-box p {
@@ -456,10 +480,15 @@ const getStatusText = (status) => {
 .my-signups {
   padding: 24px;
   margin-top: 40px;
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
 }
 
 .my-signups h3 {
   margin-bottom: 20px;
+  font-weight: 800;
   color: #012030;
 }
 
@@ -474,10 +503,11 @@ const getStatusText = (status) => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 8px;
-  border: 1px solid rgba(69, 196, 176, 0.25);
-  border-left: 4px solid #45C4B0;
+  background: #ffffff;
+  border-radius: 2px;
+  border: 2px solid #012030;
+  border-left: 6px solid #45C4B0;
+  box-shadow: 3px 3px 0px #012030;
 }
 
 .signup-info {
@@ -488,6 +518,7 @@ const getStatusText = (status) => {
 
 .signup-info strong {
   color: #012030;
+  font-weight: 800;
 }
 
 .text-muted {
@@ -496,27 +527,28 @@ const getStatusText = (status) => {
 }
 
 .signup-date {
-  font-weight: 600;
+  font-weight: 700;
   color: #13678A;
 }
 
 .status-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border: 1.5px solid #012030;
+  box-shadow: 1.5px 1.5px 0px #012030;
 }
 
 .status-badge.pending {
   background: #DAFDBA;
-  color: #13678A;
-  border: 1px solid #9AEBA3;
+  color: #012030;
 }
 
 .status-badge.completed {
   background: #45C4B0;
   color: #012030;
-  font-weight: 600;
 }
 
 .status-badge.cancelled {

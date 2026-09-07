@@ -91,14 +91,16 @@ const formatDate = (isoString) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-  border: 1px solid rgba(69, 196, 176, 0.28);
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .event-card:hover {
-  transform: translateY(-4px);
-  border-color: #45C4B0;
-  box-shadow: 0 12px 24px rgba(1, 32, 48, 0.12);
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px #012030;
 }
 
 .card-header {
@@ -110,16 +112,20 @@ const formatDate = (isoString) => {
 
 .hours-tag {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.03em;
   color: #012030;
   background: #DAFDBA;
-  border: 1px solid rgba(69, 196, 176, 0.4);
+  border: 1.5px solid #012030;
+  box-shadow: 1.5px 1.5px 0px #012030;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 
 h3 {
   font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: #012030;
   margin-bottom: 16px;
   line-height: 1.4;
@@ -131,17 +137,19 @@ h3 {
   flex-direction: column;
   gap: 8px;
   font-size: 0.9rem;
+  font-weight: 600;
   color: #13678A;
 }
 
 .loading-state, .empty-state {
   text-align: center;
   padding: 60px;
+  font-weight: 600;
   color: #13678A;
 }
 
 .spinner {
-  border: 4px solid rgba(19, 103, 138, 0.15);
+  border: 4px solid #13678A;
   width: 36px;
   height: 36px;
   border-radius: 50%;

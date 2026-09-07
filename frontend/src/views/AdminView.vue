@@ -421,28 +421,35 @@ watch(matrixWeekStart, () => {
 
 .tabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-top: 20px;
   flex-wrap: wrap;
 }
 
 .tab-btn {
-  padding: 8px 20px;
-  border: 2px solid transparent;
-  border-bottom-color: rgba(19, 103, 138, 0.2);
-  background: none;
+  padding: 10px 24px;
+  border: 2px solid #012030;
+  background: #ffffff;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.03em;
   color: #13678A;
-  border-radius: 8px 8px 0 0;
-  transition: all 0.2s;
+  border-radius: 2px;
+  box-shadow: 2px 2px 0px #012030;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover {
+  background: #DAFDBA;
+  color: #012030;
 }
 
 .tab-btn.active {
-  border-color: #45C4B0;
+  border-color: #012030;
   color: #012030;
-  background: #DAFDBA;
-  font-weight: 700;
+  background: #45C4B0;
+  box-shadow: 4px 4px 0px #012030;
+  transform: translate(-1px, -1px);
 }
 
 .tab-content {
@@ -457,22 +464,25 @@ watch(matrixWeekStart, () => {
 .form-group label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 500;
+  font-weight: 700;
   color: #012030;
 }
 
 .form-group input, .form-group select, .form-group textarea {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid rgba(19, 103, 138, 0.25);
-  border-radius: 6px;
+  padding: 10px 12px;
+  border: 2px solid #012030;
+  border-radius: 2px;
   color: #012030;
+  font-weight: 600;
+  background: #ffffff;
+  box-sizing: border-box;
 }
 
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
   outline: none;
-  border-color: #45C4B0;
-  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.2);
+  border-color: #012030;
+  box-shadow: 3px 3px 0px #45C4B0;
 }
 
 .form-row {
@@ -489,23 +499,34 @@ watch(matrixWeekStart, () => {
 }
 
 .btn-logout {
-  background: #13678A;
-  color: white;
-  border: none;
+  background: #DAFDBA;
+  color: #012030;
+  border: 2px solid #012030;
   padding: 6px 16px;
-  border-radius: 6px;
-  font-weight: 600;
+  border-radius: 2px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  box-shadow: 2px 2px 0px #012030;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.15s;
 }
 
 .btn-logout:hover {
-  background: #012030;
+  background: #45C4B0;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #012030;
+}
+
+.btn-logout:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #012030;
 }
 
 .table-container {
   overflow-x: auto;
   margin-top: 16px;
+  border: 2px solid #012030;
+  box-shadow: 4px 4px 0px #012030;
 }
 
 table {
@@ -514,20 +535,22 @@ table {
 }
 
 th, td {
-  padding: 10px 14px;
-  border-bottom: 1px solid rgba(19, 103, 138, 0.12);
+  padding: 12px 14px;
+  border: 1px solid #012030;
   text-align: left;
 }
 
 th {
   background: #DAFDBA;
   color: #012030;
-  font-weight: 700;
-  border-bottom: 2px solid #45C4B0;
+  font-weight: 800;
+  border-bottom: 2px solid #012030;
 }
 
 td {
   color: #012030;
+  font-weight: 600;
+  background: #ffffff;
 }
 
 .rotation-list {
@@ -542,18 +565,20 @@ td {
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  background: rgba(218, 253, 186, 0.35);
-  border: 1px solid rgba(69, 196, 176, 0.25);
-  border-left: 4px solid #13678A;
-  border-radius: 8px;
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-left: 6px solid #13678A;
+  border-radius: 2px;
+  box-shadow: 3px 3px 0px #012030;
 }
 
-.rot-date { font-weight: 600; color: #13678A; }
+.rot-date { font-weight: 700; color: #13678A; }
 .rot-class { font-weight: 800; color: #012030; }
 
 .empty-text {
   text-align: center;
   color: #13678A;
+  font-weight: 600;
   padding: 16px;
 }
 
@@ -574,7 +599,7 @@ td {
 .search-box label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 500;
+  font-weight: 700;
   font-size: 0.9rem;
   color: #012030;
 }
@@ -583,14 +608,16 @@ td {
 .search-box select {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid rgba(19, 103, 138, 0.25);
-  border-radius: 6px;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  font-weight: 600;
   color: #012030;
+  box-sizing: border-box;
 }
 
-.hint { font-size: 0.8rem; color: #13678A; display: block; margin-top: 4px; }
+.hint { font-size: 0.8rem; color: #13678A; font-weight: 600; display: block; margin-top: 4px; }
 .mb-4 { margin-bottom: 16px; }
-.font-bold { font-weight: bold; }
+.font-bold { font-weight: 800; }
 .text-primary { color: #13678A; }
 
 /* 周常管理样式 */
@@ -607,17 +634,17 @@ td {
 
 .shift-admin-card {
   padding: 16px;
-  transition: all 0.2s;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(69, 196, 176, 0.25);
-  border-left: 4px solid #45C4B0;
-  border-radius: 8px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-left: 6px solid #45C4B0;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
 }
 
 .shift-admin-card:hover {
-  transform: translateY(-2px);
-  border-color: #45C4B0;
-  box-shadow: 0 4px 14px rgba(1, 32, 48, 0.08);
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px #012030;
 }
 
 .shift-admin-card .shift-header {
@@ -626,11 +653,11 @@ td {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(19, 103, 138, 0.15);
+  border-bottom: 2px solid #012030;
 }
 
 .shift-admin-card .shift-name {
-  font-weight: 600;
+  font-weight: 800;
   color: #012030;
   font-size: 1.05rem;
 }
@@ -639,9 +666,10 @@ td {
   background: #13678A;
   color: white;
   padding: 4px 10px;
-  border-radius: 12px;
+  border: 1px solid #012030;
+  border-radius: 2px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .shift-details {
@@ -655,11 +683,12 @@ td {
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
+  font-weight: 600;
   color: #13678A;
 }
 
 .detail-row .icon { font-size: 1rem; }
-.detail-row .description { font-size: 0.85rem; font-style: italic; }
+.detail-row .description { font-size: 0.85rem; font-style: italic; color: #012030; }
 
 /* 二维矩阵表格样式 */
 .matrix-section {
@@ -669,14 +698,16 @@ td {
 .matrix-info {
   margin-bottom: 12px;
   font-size: 0.95rem;
+  font-weight: 600;
   color: #13678A;
 }
 
 .matrix-table-container {
   max-height: 500px;
   overflow: auto;
-  border: 1px solid rgba(69, 196, 176, 0.3);
-  border-radius: 8px;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
 }
 
 .matrix-table {
@@ -689,13 +720,12 @@ td {
 .matrix-table th, .matrix-table td {
   padding: 10px 12px;
   white-space: nowrap;
-  border-bottom: 1px solid rgba(19, 103, 138, 0.1);
-  border-right: 1px solid rgba(19, 103, 138, 0.08);
+  border: 1px solid #012030;
 }
 
 .matrix-header {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 800;
   text-align: center;
   background: #DAFDBA;
   color: #012030;
@@ -705,21 +735,22 @@ td {
 .sticky-col {
   position: sticky;
   left: 0;
-  background: rgba(255, 255, 255, 0.96);
+  background: #ffffff;
   z-index: 1;
-  box-shadow: 2px 0 4px rgba(1, 32, 48, 0.05);
+  border-right: 2px solid #012030;
   min-width: 80px;
 }
 
 thead .sticky-col {
   background: #DAFDBA;
   color: #012030;
-  font-weight: 700;
+  font-weight: 800;
   z-index: 2;
+  border-right: 2px solid #012030;
 }
 
 .student-name {
-  font-weight: 600;
+  font-weight: 700;
   color: #012030;
 }
 
@@ -732,7 +763,8 @@ thead .sticky-col {
 }
 
 .empty-cell {
-  color: rgba(19, 103, 138, 0.35);
+  color: #13678A;
+  opacity: 0.4;
 }
 
 @media (max-width: 768px) {

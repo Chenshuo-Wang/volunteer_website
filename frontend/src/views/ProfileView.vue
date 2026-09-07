@@ -176,52 +176,61 @@ const handlePasswordChange = async () => {
   padding: 40px 20px;
   text-align: center;
   height: fit-content;
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
 }
 
 .avatar-placeholder {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #13678A, #45C4B0);
-  color: white;
-  border-radius: 50%;
+  background: #45C4B0;
+  color: #012030;
+  border-radius: 4px;
+  border: 2px solid #012030;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 2.2rem;
+  font-weight: 900;
   margin: 0 auto 16px;
-  box-shadow: 0 4px 16px rgba(19, 103, 138, 0.25);
+  box-shadow: 3px 3px 0px #012030;
 }
 
 .class-info {
   color: #13678A;
+  font-weight: 600;
   margin-bottom: 24px;
 }
 
 .stats-box {
   background: #DAFDBA;
-  border: 1px solid rgba(69, 196, 176, 0.35);
+  border: 2px solid #012030;
+  box-shadow: 2px 2px 0px #012030;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 2px;
   margin-bottom: 24px;
 }
 
 .stat-value {
   font-size: 2rem;
-  font-weight: 800;
+  font-weight: 900;
   color: #012030;
 }
 
 .stat-label {
   font-size: 0.8rem;
   color: #13678A;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .contact-info {
   text-align: left;
   font-size: 0.9rem;
   color: #012030;
+  font-weight: 600;
 }
 
 .info-row {
@@ -233,6 +242,14 @@ const handlePasswordChange = async () => {
 
 .history-card {
   padding: 30px;
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
+}
+
+.history-card h3 {
+  font-weight: 800;
 }
 
 .history-list {
@@ -246,10 +263,11 @@ const handlePasswordChange = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 8px;
-  border: 1px solid rgba(69, 196, 176, 0.25);
-  border-left: 4px solid #45C4B0;
+  background: #ffffff;
+  border-radius: 2px;
+  border: 2px solid #012030;
+  border-left: 6px solid #45C4B0;
+  box-shadow: 3px 3px 0px #012030;
 }
 
 .history-left {
@@ -260,11 +278,12 @@ const handlePasswordChange = async () => {
 
 .history-date {
   font-size: 0.8rem;
+  font-weight: 600;
   color: #13678A;
 }
 
 .history-title {
-  font-weight: 600;
+  font-weight: 700;
   color: #012030;
 }
 
@@ -284,17 +303,26 @@ const handlePasswordChange = async () => {
 .status-text {
   font-size: 0.8rem;
 }
-.text-green { color: #13678A; font-weight: 600; }
-.text-gray { color: rgba(1, 32, 48, 0.6); }
+.text-green { color: #13678A; font-weight: 700; }
+.text-gray { color: #012030; font-weight: 500; opacity: 0.6; }
 
 .empty-history {
   text-align: center;
   padding: 40px;
   color: #13678A;
+  font-weight: 600;
 }
 
 .password-card {
   padding: 30px;
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px #012030;
+}
+
+.password-card h3 {
+  font-weight: 800;
 }
 
 .password-form .form-group {
@@ -304,42 +332,47 @@ const handlePasswordChange = async () => {
 .password-form label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 500;
+  font-weight: 700;
   color: #012030;
 }
 
 .password-form input {
   width: 100%;
-  padding: 10px;
-  border: 1px solid rgba(19, 103, 138, 0.25);
-  border-radius: 6px;
+  padding: 10px 12px;
+  border: 2px solid #012030;
+  border-radius: 2px;
   color: #012030;
+  font-weight: 600;
+  box-sizing: border-box;
 }
 
 .password-form input:focus {
-  border-color: #45C4B0;
-  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.2);
+  border-color: #012030;
+  box-shadow: 3px 3px 0px #45C4B0;
   outline: none;
 }
 
 .error-msg {
   color: #012030;
   background: rgba(1, 32, 48, 0.08);
-  border: 1px solid #13678A;
+  border: 2px solid #012030;
+  box-shadow: 2px 2px 0px #012030;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   margin-bottom: 12px;
   font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .success-msg {
   color: #012030;
   background: #DAFDBA;
-  border: 1px solid #45C4B0;
+  border: 2px solid #012030;
+  box-shadow: 2px 2px 0px #012030;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   margin-bottom: 12px;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 </style>

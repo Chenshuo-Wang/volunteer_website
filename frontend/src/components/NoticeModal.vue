@@ -40,32 +40,39 @@ const close = () => {
 }
 .modal-content {
   background: white;
-  padding: 30px;
-  border-radius: 12px;
+  padding: 32px;
+  border-radius: 2px;
   width: 90%;
   max-width: 500px;
   text-align: center;
-  border: 1px solid rgba(69, 196, 176, 0.35);
-  box-shadow: 0 16px 40px rgba(1, 32, 48, 0.2);
+  border: 3px solid #012030;
+  box-shadow: 8px 8px 0px #012030;
 }
-h2, h3 { color: #012030; }
-p, li { color: #13678A; }
+h2 { color: #012030; font-weight: 800; }
+h3 { color: #13678A; font-weight: 700; }
+p, li { color: #012030; font-weight: 500; }
 ul { text-align: left; margin: 20px; }
 li { margin-bottom: 10px; }
 button {
-  padding: 12px 25px;
-  font-size: 1em;
-  font-weight: 600;
-  background: linear-gradient(135deg, #13678A, #45C4B0);
-  color: white;
-  border: none;
-  border-radius: 8px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: #45C4B0;
+  color: #012030;
+  border: 2px solid #012030;
+  border-radius: 2px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(19, 103, 138, 0.25);
-  transition: all 0.2s;
+  box-shadow: 3px 3px 0px #012030;
+  transition: all 0.15s;
 }
 button:hover {
-  background: linear-gradient(135deg, #012030, #13678A);
-  transform: translateY(-2px);
+  background: #9AEBA3;
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #012030;
+}
+button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #012030;
 }
 </style>

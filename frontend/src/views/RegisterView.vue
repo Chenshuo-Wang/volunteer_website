@@ -138,8 +138,10 @@ const handleRegister = async () => {
   width: 100%;
   max-width: 500px;
   padding: 40px;
-  border: 1px solid rgba(69, 196, 176, 0.3);
-  box-shadow: 0 12px 32px rgba(1, 32, 48, 0.08);
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  box-shadow: 6px 6px 0px #012030;
 }
 
 .register-header {
@@ -149,11 +151,14 @@ const handleRegister = async () => {
 
 .register-header h2 {
   color: #012030;
+  font-weight: 900;
+  letter-spacing: -0.01em;
   margin-bottom: 8px;
 }
 
 .register-header p {
   color: #13678A;
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
@@ -173,35 +178,39 @@ const handleRegister = async () => {
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 500;
+  font-weight: 700;
   color: #012030;
 }
 
 .form-group input {
   width: 100%;
   padding: 12px;
-  border: 1px solid rgba(19, 103, 138, 0.25);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #012030;
+  border-radius: 2px;
+  background: #ffffff;
   color: #012030;
-  transition: all 0.3s ease;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
-  border-color: #45C4B0;
-  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.25);
+  border-color: #012030;
+  box-shadow: 3px 3px 0px #45C4B0;
   outline: none;
 }
 
 .error-msg {
   color: #012030;
   font-size: 0.9rem;
+  font-weight: 700;
   text-align: center;
   margin-bottom: 16px;
   background: rgba(1, 32, 48, 0.08);
-  border: 1px solid #13678A;
-  padding: 8px;
-  border-radius: 6px;
+  border: 2px solid #012030;
+  box-shadow: 2px 2px 0px #012030;
+  padding: 10px;
+  border-radius: 2px;
 }
 
 .w-100 {
@@ -212,12 +221,13 @@ const handleRegister = async () => {
   text-align: center;
   margin-top: 20px;
   color: #13678A;
+  font-weight: 600;
 }
 
 .form-footer a {
   color: #012030;
-  font-weight: 700;
-  border-bottom: 1px solid #45C4B0;
+  font-weight: 800;
+  border-bottom: 2px solid #012030;
   text-decoration: none;
 }
 
