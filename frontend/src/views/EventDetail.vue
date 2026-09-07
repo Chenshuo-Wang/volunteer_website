@@ -129,12 +129,14 @@ const handleSignup = async () => {
 
 .detail-card {
   padding: 40px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(69, 196, 176, 0.3);
+  box-shadow: 0 12px 32px rgba(1, 32, 48, 0.08);
 }
 
 .header-section {
   text-align: center;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  border-bottom: 1px solid rgba(19, 103, 138, 0.15);
   padding-bottom: 24px;
   margin-bottom: 24px;
 }
@@ -142,13 +144,14 @@ const handleSignup = async () => {
 .title {
   margin: 16px 0;
   font-size: 2rem;
+  color: #012030;
 }
 
 .meta-row {
   display: flex;
   justify-content: center;
   gap: 24px;
-  color: var(--text-muted);
+  color: #13678A;
   font-size: 0.95rem;
 }
 
@@ -159,7 +162,7 @@ const handleSignup = async () => {
 .description {
   white-space: pre-wrap;
   line-height: 1.8;
-  color: #374151;
+  color: #012030;
   margin-bottom: 24px;
 }
 
@@ -167,7 +170,8 @@ const handleSignup = async () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(218, 253, 186, 0.3);
+  border: 1px solid rgba(69, 196, 176, 0.3);
   padding: 20px;
   border-radius: 12px;
 }
@@ -179,11 +183,12 @@ const handleSignup = async () => {
 
 .label {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: #13678A;
   margin-bottom: 4px;
 }
 
 .value {
+  color: #012030;
   font-weight: 600;
 }
 
@@ -203,6 +208,7 @@ const handleSignup = async () => {
 }
 
 .login-prompt p {
+  color: #13678A;
   margin-bottom: 12px;
 }
 </style>

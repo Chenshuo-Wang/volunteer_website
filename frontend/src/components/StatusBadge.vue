@@ -37,10 +37,10 @@ const statusClass = computed(() => {
   letter-spacing: 0.05em;
 }
 
-.status-recruiting { background-color: #d1fae5; color: #065f46; } /* Green */
-.status-full { background-color: #ffedd5; color: #9a3412; } /* Orange */
-.status-closed { background-color: #fee2e2; color: #991b1b; } /* Red */
-.status-active { background-color: #dbeafe; color: #1e40af; } /* Blue */
-.status-finished { background-color: #f3f4f6; color: #4b5563; } /* Gray */
-.status-default { background-color: #f3f4f6; color: #4b5563; }
+.status-recruiting { background-color: #DAFDBA; color: #012030; border: 1px solid #45C4B0; }
+.status-active { background-color: #45C4B0; color: #012030; }
+.status-full { background-color: #9AEBA3; color: #012030; border: 1px solid rgba(19, 103, 138, 0.2); }
+.status-closed { background-color: rgba(1, 32, 48, 0.08); color: #13678A; border: 1px solid rgba(19, 103, 138, 0.2); }
+.status-finished { background-color: rgba(1, 32, 48, 0.08); color: #13678A; }
+.status-default { background-color: rgba(1, 32, 48, 0.08); color: #13678A; }
 </style>

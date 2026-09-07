@@ -181,7 +181,7 @@ const handlePasswordChange = async () => {
 .avatar-placeholder {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  background: linear-gradient(135deg, #13678A, #45C4B0);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -190,15 +190,17 @@ const handlePasswordChange = async () => {
   font-size: 2rem;
   font-weight: bold;
   margin: 0 auto 16px;
+  box-shadow: 0 4px 16px rgba(19, 103, 138, 0.25);
 }
 
 .class-info {
-  color: var(--text-muted);
+  color: #13678A;
   margin-bottom: 24px;
 }
 
 .stats-box {
-  background: rgba(255, 255, 255, 0.5);
+  background: #DAFDBA;
+  border: 1px solid rgba(69, 196, 176, 0.35);
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 24px;
@@ -207,18 +209,19 @@ const handlePasswordChange = async () => {
 .stat-value {
   font-size: 2rem;
   font-weight: 800;
-  color: var(--primary-color);
+  color: #012030;
 }
 
 .stat-label {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: #13678A;
+  font-weight: 500;
 }
 
 .contact-info {
   text-align: left;
   font-size: 0.9rem;
-  color: var(--text-main);
+  color: #012030;
 }
 
 .info-row {
@@ -243,9 +246,10 @@ const handlePasswordChange = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.85);
   border-radius: 8px;
-  border-left: 4px solid var(--secondary-color);
+  border: 1px solid rgba(69, 196, 176, 0.25);
+  border-left: 4px solid #45C4B0;
 }
 
 .history-left {
@@ -256,11 +260,12 @@ const handlePasswordChange = async () => {
 
 .history-date {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: #13678A;
 }
 
 .history-title {
   font-weight: 600;
+  color: #012030;
 }
 
 .history-right {
@@ -273,19 +278,19 @@ const handlePasswordChange = async () => {
 
 .hours-badge {
   font-weight: 800;
-  color: var(--primary-color);
+  color: #13678A;
 }
 
 .status-text {
   font-size: 0.8rem;
 }
-.text-green { color: #059669; }
-.text-gray { color: #6b7280; }
+.text-green { color: #13678A; font-weight: 600; }
+.text-gray { color: rgba(1, 32, 48, 0.6); }
 
 .empty-history {
   text-align: center;
   padding: 40px;
-  color: var(--text-muted);
+  color: #13678A;
 }
 
 .password-card {
@@ -300,18 +305,27 @@ const handlePasswordChange = async () => {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
+  color: #012030;
 }
 
 .password-form input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(19, 103, 138, 0.25);
   border-radius: 6px;
+  color: #012030;
+}
+
+.password-form input:focus {
+  border-color: #45C4B0;
+  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.2);
+  outline: none;
 }
 
 .error-msg {
-  color: #ef4444;
-  background: #fee2e2;
+  color: #012030;
+  background: rgba(1, 32, 48, 0.08);
+  border: 1px solid #13678A;
   padding: 8px;
   border-radius: 4px;
   margin-bottom: 12px;
@@ -319,11 +333,13 @@ const handlePasswordChange = async () => {
 }
 
 .success-msg {
-  color: #059669;
-  background: #d1fae5;
+  color: #012030;
+  background: #DAFDBA;
+  border: 1px solid #45C4B0;
   padding: 8px;
   border-radius: 4px;
   margin-bottom: 12px;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 </style>

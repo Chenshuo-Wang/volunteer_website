@@ -161,7 +161,7 @@
           <p v-else class="empty-text">暂无轮换记录</p>
         </div>
 
-        <hr style="margin: 24px 0; border-color: #e5e7eb;" />
+        <hr style="margin: 24px 0; border-color: rgba(69, 196, 176, 0.3);" />
 
         <!-- 区域2: 报名统计查询（二维表格） -->
         <div class="section-block">
@@ -429,18 +429,20 @@ watch(matrixWeekStart, () => {
 .tab-btn {
   padding: 8px 20px;
   border: 2px solid transparent;
-  border-bottom-color: #ddd;
+  border-bottom-color: rgba(19, 103, 138, 0.2);
   background: none;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  color: #13678A;
   border-radius: 8px 8px 0 0;
   transition: all 0.2s;
 }
 
 .tab-btn.active {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  background: rgba(79, 70, 229, 0.05);
+  border-color: #45C4B0;
+  color: #012030;
+  background: #DAFDBA;
+  font-weight: 700;
 }
 
 .tab-content {
@@ -456,13 +458,21 @@ watch(matrixWeekStart, () => {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
+  color: #012030;
 }
 
 .form-group input, .form-group select, .form-group textarea {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(19, 103, 138, 0.25);
   border-radius: 6px;
+  color: #012030;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none;
+  border-color: #45C4B0;
+  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.2);
 }
 
 .form-row {
@@ -479,12 +489,18 @@ watch(matrixWeekStart, () => {
 }
 
 .btn-logout {
-  background: #ef4444;
+  background: #13678A;
   color: white;
   border: none;
   padding: 6px 16px;
   border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-logout:hover {
+  background: #012030;
 }
 
 .table-container {
@@ -499,13 +515,19 @@ table {
 
 th, td {
   padding: 10px 14px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(19, 103, 138, 0.12);
   text-align: left;
 }
 
 th {
-  background: #f9fafb;
-  font-weight: 600;
+  background: #DAFDBA;
+  color: #012030;
+  font-weight: 700;
+  border-bottom: 2px solid #45C4B0;
+}
+
+td {
+  color: #012030;
 }
 
 .rotation-list {
@@ -520,16 +542,18 @@ th {
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  background: #f9fafb;
+  background: rgba(218, 253, 186, 0.35);
+  border: 1px solid rgba(69, 196, 176, 0.25);
+  border-left: 4px solid #13678A;
   border-radius: 8px;
 }
 
-.rot-date { font-weight: 600; color: var(--primary-color); }
-.rot-class { font-weight: 700; color: #d97706; }
+.rot-date { font-weight: 600; color: #13678A; }
+.rot-class { font-weight: 800; color: #012030; }
 
 .empty-text {
   text-align: center;
-  color: var(--text-muted);
+  color: #13678A;
   padding: 16px;
 }
 
@@ -552,20 +576,22 @@ th {
   margin-bottom: 6px;
   font-weight: 500;
   font-size: 0.9rem;
+  color: #012030;
 }
 
 .search-box input,
 .search-box select {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(19, 103, 138, 0.25);
   border-radius: 6px;
+  color: #012030;
 }
 
-.hint { font-size: 0.8rem; color: #666; display: block; margin-top: 4px; }
+.hint { font-size: 0.8rem; color: #13678A; display: block; margin-top: 4px; }
 .mb-4 { margin-bottom: 16px; }
 .font-bold { font-weight: bold; }
-.text-primary { color: var(--primary-color); }
+.text-primary { color: #13678A; }
 
 /* 周常管理样式 */
 .section-block {
@@ -582,12 +608,16 @@ th {
 .shift-admin-card {
   padding: 16px;
   transition: all 0.2s;
-  border-left: 4px solid var(--accent-color);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(69, 196, 176, 0.25);
+  border-left: 4px solid #45C4B0;
+  border-radius: 8px;
 }
 
 .shift-admin-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #45C4B0;
+  box-shadow: 0 4px 14px rgba(1, 32, 48, 0.08);
 }
 
 .shift-admin-card .shift-header {
@@ -596,17 +626,17 @@ th {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(19, 103, 138, 0.15);
 }
 
 .shift-admin-card .shift-name {
   font-weight: 600;
-  color: var(--primary-color);
+  color: #012030;
   font-size: 1.05rem;
 }
 
 .shift-day-badge {
-  background: var(--primary-color);
+  background: #13678A;
   color: white;
   padding: 4px 10px;
   border-radius: 12px;
@@ -625,7 +655,7 @@ th {
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #13678A;
 }
 
 .detail-row .icon { font-size: 1rem; }
@@ -639,13 +669,13 @@ th {
 .matrix-info {
   margin-bottom: 12px;
   font-size: 0.95rem;
-  color: var(--text-muted);
+  color: #13678A;
 }
 
 .matrix-table-container {
   max-height: 500px;
   overflow: auto;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(69, 196, 176, 0.3);
   border-radius: 8px;
 }
 
@@ -659,34 +689,38 @@ th {
 .matrix-table th, .matrix-table td {
   padding: 10px 12px;
   white-space: nowrap;
-  border-bottom: 1px solid #eee;
-  border-right: 1px solid #f3f4f6;
+  border-bottom: 1px solid rgba(19, 103, 138, 0.1);
+  border-right: 1px solid rgba(19, 103, 138, 0.08);
 }
 
 .matrix-header {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
-  background: #f0f4ff;
+  background: #DAFDBA;
+  color: #012030;
   min-width: 100px;
 }
 
 .sticky-col {
   position: sticky;
   left: 0;
-  background: white;
+  background: rgba(255, 255, 255, 0.96);
   z-index: 1;
-  box-shadow: 2px 0 4px rgba(0,0,0,0.05);
+  box-shadow: 2px 0 4px rgba(1, 32, 48, 0.05);
   min-width: 80px;
 }
 
 thead .sticky-col {
-  background: #f9fafb;
+  background: #DAFDBA;
+  color: #012030;
+  font-weight: 700;
   z-index: 2;
 }
 
 .student-name {
   font-weight: 600;
+  color: #012030;
 }
 
 .matrix-cell {
@@ -698,7 +732,7 @@ thead .sticky-col {
 }
 
 .empty-cell {
-  color: #d1d5db;
+  color: rgba(19, 103, 138, 0.35);
 }
 
 @media (max-width: 768px) {

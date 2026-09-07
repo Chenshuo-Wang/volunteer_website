@@ -90,6 +90,8 @@ const handleLogin = async () => {
   width: 100%;
   max-width: 400px;
   padding: 40px;
+  border: 1px solid rgba(69, 196, 176, 0.3);
+  box-shadow: 0 12px 32px rgba(1, 32, 48, 0.08);
 }
 
 .login-header {
@@ -98,12 +100,12 @@ const handleLogin = async () => {
 }
 
 .login-header h2 {
-  color: var(--primary-color);
+  color: #012030;
   margin-bottom: 8px;
 }
 
 .login-header p {
-  color: var(--text-muted);
+  color: #13678A;
   font-size: 0.9rem;
 }
 
@@ -115,32 +117,34 @@ const handleLogin = async () => {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: var(--text-color);
+  color: #012030;
 }
 
 .form-group input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(19, 103, 138, 0.25);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
+  color: #012030;
   transition: all 0.3s ease;
 }
 
 .form-group input:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #45C4B0;
+  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.25);
   outline: none;
 }
 
 .error-msg {
-  color: #ef4444;
+  color: #012030;
   font-size: 0.9rem;
   text-align: center;
   margin-bottom: 16px;
-  background: #fee2e2;
+  background: rgba(1, 32, 48, 0.08);
+  border: 1px solid #13678A;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .w-100 {
@@ -150,11 +154,13 @@ const handleLogin = async () => {
 .form-footer {
   text-align: center;
   margin-top: 20px;
-  color: var(--text-muted);
+  color: #13678A;
 }
 
 .form-footer a {
-  color: var(--primary-color);
+  color: #012030;
+  font-weight: 700;
+  border-bottom: 1px solid #45C4B0;
   text-decoration: none;
 }
 

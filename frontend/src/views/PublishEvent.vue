@@ -157,21 +157,97 @@ const handlePublish = async () => {
 </script>
 
 <style scoped>
-/* (所有样式保持不变) */
-.publish-container { max-width: 800px; margin: 40px auto; padding: 20px; font-family: sans-serif; background-color: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.publish-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(69, 196, 176, 0.3);
+  box-shadow: 0 8px 32px rgba(1, 32, 48, 0.08);
+}
+h1 { color: #012030; }
 .password-gate { text-align: center; padding: 40px; }
-.password-input { font-size: 1.2em; padding: 10px; margin-bottom: 20px; width: 100%; max-width: 300px; box-sizing: border-box; }
+.password-input {
+  font-size: 1.2em;
+  padding: 10px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 300px;
+  box-sizing: border-box;
+  border: 1px solid rgba(19, 103, 138, 0.25);
+  border-radius: 6px;
+  color: #012030;
+}
+.password-input:focus {
+  border-color: #45C4B0;
+  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.2);
+  outline: none;
+}
 .form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
-.form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; box-sizing: border-box; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #012030; }
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(19, 103, 138, 0.25);
+  border-radius: 6px;
+  font-size: 1em;
+  color: #012030;
+  box-sizing: border-box;
+}
+.form-group input:focus, .form-group textarea:focus {
+  border-color: #45C4B0;
+  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.2);
+  outline: none;
+}
 .form-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
 @media (min-width: 600px) { .form-grid { grid-template-columns: 1fr 1fr; } }
-.submit-button { width: 100%; padding: 15px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 1.2em; cursor: pointer; }
-.submit-button:disabled { background-color: #94d3a2; cursor: not-allowed; }
-.error-message { color: #dc3545; margin-top: 10px; }
-.success-message { color: #28a745; font-size: 1.2em; text-align: center; padding: 20px; }
-.checkbox-group { display: flex; flex-wrap: wrap; gap: 20px; background-color: #f8f9fa; padding: 15px; border-radius: 6px; }
+.submit-button {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #13678A, #45C4B0);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(19, 103, 138, 0.25);
+}
+.submit-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #012030, #13678A);
+  transform: translateY(-2px);
+}
+.submit-button:disabled { background: #9AEBA3; color: #012030; cursor: not-allowed; }
+.error-message {
+  color: #012030;
+  background: rgba(1, 32, 48, 0.08);
+  border: 1px solid #13678A;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+.success-message {
+  color: #012030;
+  background: #DAFDBA;
+  border: 1px solid #45C4B0;
+  font-size: 1.2em;
+  font-weight: 600;
+  text-align: center;
+  padding: 20px;
+  border-radius: 8px;
+}
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  background-color: #DAFDBA;
+  border: 1px solid rgba(69, 196, 176, 0.3);
+  padding: 15px;
+  border-radius: 6px;
+}
 .checkbox-item { display: flex; align-items: center; }
 .checkbox-item input[type="checkbox"] { width: auto; margin-right: 8px; width: 1.2em; height: 1.2em; }
-.checkbox-item label { font-weight: normal; margin-bottom: 0; cursor: pointer; }
+.checkbox-item label { font-weight: normal; margin-bottom: 0; cursor: pointer; color: #012030; }
 </style>

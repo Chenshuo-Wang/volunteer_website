@@ -1,20 +1,31 @@
 :root {
-  /* Premium Color Palette */
-  --primary-color: #4f46e5; /* Indigo 600 */
-  --primary-hover: #4338ca; /* Indigo 700 */
-  --secondary-color: #ec4899; /* Pink 500 */
-  --accent-color: #8b5cf6; /* Violet 500 */
-  
-  --bg-gradient-start: #f3f4f6;
-  --bg-gradient-end: #e5e7eb;
-  
-  --text-main: #111827;
-  --text-muted: #6b7280;
-  
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-  
+  /* 核心五色调色盘 (Strict 5-Color System) */
+  --c-dark: #012030;      /* 深夜青蓝 / 最高对比度主色 */
+  --c-ocean: #13678A;     /* 沉稳海蓝 / 品牌主色、二级结构 */
+  --c-teal: #45C4B0;      /* 活力薄荷青 / 第一交互与高亮主焦点 */
+  --c-mint: #9AEBA3;      /* 柔和草绿 / 二级辅助与状态焦点 */
+  --c-lime: #DAFDBA;      /* 极浅青柠 / 背景过渡与轻量容器衬底 */
+
+  /* 语义化色彩映射 (突出主次关系) */
+  --primary-color: #13678A;
+  --primary-hover: #012030;
+  --accent-color: #45C4B0;
+  --secondary-color: #9AEBA3;
+  --surface-tint: #DAFDBA;
+
+  /* 文字层级 */
+  --text-main: #012030;
+  --text-muted: #13678A;
+  --text-color: #012030;
+  --text-secondary: #13678A;
+
+  /* 背景与毛玻璃 */
+  --bg-gradient-start: #DAFDBA;
+  --bg-gradient-end: #9AEBA3;
+  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(69, 196, 176, 0.28);
+  --glass-shadow: 0 8px 32px 0 rgba(1, 32, 48, 0.08);
+
   --card-radius: 16px;
   --transition-speed: 0.3s;
 }
@@ -22,7 +33,7 @@
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+  background: linear-gradient(135deg, rgba(218, 253, 186, 0.4) 0%, rgba(255, 255, 255, 0.96) 50%, rgba(154, 235, 163, 0.25) 100%);
   min-height: 100vh;
   color: var(--text-main);
   line-height: 1.6;
@@ -45,25 +56,27 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-  color: white;
+  background: linear-gradient(135deg, var(--c-ocean), var(--c-teal));
+  color: #ffffff;
   border: none;
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 2px 8px rgba(19, 103, 138, 0.2);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  background: linear-gradient(135deg, var(--c-dark), var(--c-ocean));
+  box-shadow: 0 6px 16px rgba(1, 32, 48, 0.25);
 }
 
 .btn-secondary {
-  background: white;
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  background: var(--c-lime);
+  color: var(--c-dark);
+  border: 1px solid var(--c-teal);
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 600;
@@ -72,7 +85,9 @@ body {
 }
 
 .btn-secondary:hover {
-  background: #f5f3ff;
+  background: var(--c-mint);
+  border-color: var(--c-ocean);
+  color: var(--c-dark);
 }
 
 /* Layout */
@@ -86,6 +101,7 @@ h1, h2, h3 {
   font-weight: 700;
   letter-spacing: -0.025em;
   margin-top: 0;
+  color: var(--c-dark);
 }
 
 a {
@@ -97,22 +113,23 @@ a {
 input, select, textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid rgba(19, 103, 138, 0.25);
   border-radius: 8px;
   font-size: 1rem;
+  color: var(--c-dark);
   transition: border-color 0.2s, box-shadow 0.2s;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  border-color: var(--c-teal);
+  box-shadow: 0 0 0 3px rgba(69, 196, 176, 0.25);
 }
 
 label {
   display: block;
   font-weight: 500;
   margin-bottom: 6px;
-  color: var(--text-main);
+  color: var(--c-dark);
 }

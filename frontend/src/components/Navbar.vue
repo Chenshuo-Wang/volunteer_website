@@ -51,8 +51,10 @@ const handleLogout = () => {
   margin: 0 10px;
   z-index: 100;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(69, 196, 176, 0.3);
+  box-shadow: 0 4px 20px rgba(1, 32, 48, 0.06);
 }
 
 .nav-content {
@@ -69,7 +71,7 @@ const handleLogout = () => {
   align-items: center;
   gap: 6px;
   text-decoration: none;
-  color: var(--text-color);
+  color: #012030;
 }
 
 .nav-links {
@@ -80,21 +82,26 @@ const handleLogout = () => {
 
 .nav-item {
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #13678A;
   text-decoration: none;
   font-size: 0.95rem;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   transition: all 0.2s;
 }
 
 .nav-item:hover, .router-link-active {
-  color: var(--primary-color);
-  background: rgba(37, 99, 235, 0.05);
+  color: #012030;
+  background: #DAFDBA;
 }
 
 .admin-link {
-  color: #7c3aed; /* Purple for admin */
+  color: #13678A;
+  font-weight: 700;
+}
+
+.admin-link:hover {
+  color: #012030;
 }
 
 .user-menu {
@@ -105,11 +112,20 @@ const handleLogout = () => {
 
 .btn-logout {
   background: none;
-  border: none;
-  color: #ef4444;
+  border: 1px solid rgba(19, 103, 138, 0.3);
+  color: #13678A;
   cursor: pointer;
-  font-size: 0.9rem;
-  padding: 4px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background: #DAFDBA;
+  color: #012030;
+  border-color: #45C4B0;
 }
 
 .login-btn {

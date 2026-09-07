@@ -46,12 +46,14 @@
   padding: 60px 40px;
   width: 100%;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(69, 196, 176, 0.3);
+  box-shadow: 0 8px 32px rgba(1, 32, 48, 0.08);
 }
 
 h1 {
   font-size: 2.5rem;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(135deg, #012030 0%, #13678A 55%, #45C4B0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 16px;
@@ -59,7 +61,7 @@ h1 {
 
 .subtitle {
   font-size: 1.25rem;
-  color: var(--text-muted);
+  color: #13678A;
   margin-bottom: 32px;
 }
 
@@ -79,11 +81,14 @@ h1 {
 .feature-card {
   padding: 30px;
   text-align: center;
-  transition: transform 0.3s;
+  transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+  border: 1px solid rgba(69, 196, 176, 0.25);
 }
 
 .feature-card:hover {
   transform: translateY(-5px);
+  border-color: #45C4B0;
+  box-shadow: 0 12px 28px rgba(1, 32, 48, 0.1);
 }
 
 .icon {
@@ -92,12 +97,12 @@ h1 {
 }
 
 h3 {
-  color: var(--text-main);
+  color: #012030;
   margin-bottom: 8px;
 }
 
 p {
-  color: var(--text-muted);
+  color: #13678A;
   font-size: 0.95rem;
 }
 </style>

@@ -72,7 +72,7 @@ const formatDate = (isoString) => {
 }
 
 .page-header p {
-  color: var(--text-muted);
+  color: #13678A;
 }
 
 .event-grid {
@@ -91,12 +91,14 @@ const formatDate = (isoString) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  border: 1px solid rgba(69, 196, 176, 0.28);
 }
 
 .event-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: #45C4B0;
+  box-shadow: 0 12px 24px rgba(1, 32, 48, 0.12);
 }
 
 .card-header {
@@ -108,14 +110,17 @@ const formatDate = (isoString) => {
 
 .hours-tag {
   font-size: 0.8rem;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  color: #012030;
+  background: #DAFDBA;
+  border: 1px solid rgba(69, 196, 176, 0.4);
   padding: 4px 8px;
   border-radius: 6px;
 }
 
 h3 {
   font-size: 1.25rem;
+  color: #012030;
   margin-bottom: 16px;
   line-height: 1.4;
   flex-grow: 1; /* Pushes meta to bottom */
@@ -126,21 +131,21 @@ h3 {
   flex-direction: column;
   gap: 8px;
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #13678A;
 }
 
 .loading-state, .empty-state {
   text-align: center;
   padding: 60px;
-  color: var(--text-muted);
+  color: #13678A;
 }
 
 .spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
+  border: 4px solid rgba(19, 103, 138, 0.15);
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border-left-color: var(--primary-color);
+  border-left-color: #45C4B0;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px;
 }

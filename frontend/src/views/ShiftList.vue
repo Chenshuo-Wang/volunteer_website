@@ -310,14 +310,15 @@ const getStatusText = (status) => {
 
 .date-selector input[type="date"] {
   padding: 8px 12px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid #13678A;
   border-radius: 8px;
   font-size: 1rem;
+  color: #012030;
   min-width: 200px;
 }
 
 .date-hint {
-  color: var(--primary-color);
+  color: #13678A;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -332,22 +333,24 @@ const getStatusText = (status) => {
 .shift-card {
   padding: 20px;
   transition: all 0.3s;
-  border-left: 4px solid var(--accent-color);
+  border: 1px solid rgba(69, 196, 176, 0.25);
+  border-left: 4px solid #45C4B0;
   position: relative;
   overflow: hidden;
 }
 
 .shift-card.shift-canteen {
-  border-left-color: #10b981; /* 绿色 - 食堂 */
+  border-left-color: #45C4B0; /* 薄荷青 - 食堂 */
 }
 
 .shift-card.shift-etiquette {
-  border-left-color: #3b82f6; /* 蓝色 - 文明礼仪 */
+  border-left-color: #13678A; /* 海蓝 - 文明礼仪 */
 }
 
 .shift-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: #45C4B0;
+  box-shadow: 0 8px 20px rgba(1, 32, 48, 0.1);
 }
 
 .shift-header {
@@ -360,12 +363,12 @@ const getStatusText = (status) => {
 }
 
 .shift-name {
-  color: var(--primary-color);
+  color: #012030;
 }
 
 .shift-hours {
   font-size: 0.85rem;
-  background: var(--primary-color);
+  background: #13678A;
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -380,7 +383,7 @@ const getStatusText = (status) => {
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #13678A;
   margin-bottom: 6px;
 }
 
@@ -395,7 +398,7 @@ const getStatusText = (status) => {
 
 .capacity-bar {
   height: 6px;
-  background: #e5e7eb;
+  background: #DAFDBA;
   border-radius: 3px;
   margin: 12px 0;
   overflow: hidden;
@@ -403,12 +406,12 @@ const getStatusText = (status) => {
 
 .capacity-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+  background: linear-gradient(90deg, #9AEBA3, #45C4B0);
   transition: width 0.3s;
 }
 
 .capacity-fill.full {
-  background: #ef4444;
+  background: #012030;
 }
 
 .btn-sm {
@@ -421,28 +424,29 @@ const getStatusText = (status) => {
 
 .rotation-banner {
   text-align: center;
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  color: #b45309;
+  background: linear-gradient(135deg, #DAFDBA 0%, rgba(154, 235, 163, 0.5) 100%);
+  color: #012030;
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 24px;
   font-weight: 500;
-  border: 2px solid #fcd34d;
-  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.1);
+  border: 2px solid #45C4B0;
+  box-shadow: 0 4px 16px rgba(1, 32, 48, 0.08);
 }
 
 .highlight-class {
   font-weight: 800;
-  color: #d97706;
+  color: #13678A;
   font-size: 1.1rem;
 }
 
 .notice-box {
   text-align: center;
   padding: 40px 20px;
-  background: #f3f4f6;
+  background: rgba(218, 253, 186, 0.35);
+  border: 1px solid #9AEBA3;
   border-radius: 12px;
-  color: var(--text-muted);
+  color: #012030;
 }
 
 .notice-box p {
@@ -456,7 +460,7 @@ const getStatusText = (status) => {
 
 .my-signups h3 {
   margin-bottom: 20px;
-  color: var(--primary-color);
+  color: #012030;
 }
 
 .signup-list {
@@ -470,9 +474,10 @@ const getStatusText = (status) => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #f9fafb;
+  background: rgba(255, 255, 255, 0.85);
   border-radius: 8px;
-  border-left: 3px solid var(--accent-color);
+  border: 1px solid rgba(69, 196, 176, 0.25);
+  border-left: 4px solid #45C4B0;
 }
 
 .signup-info {
@@ -481,14 +486,18 @@ const getStatusText = (status) => {
   gap: 4px;
 }
 
+.signup-info strong {
+  color: #012030;
+}
+
 .text-muted {
-  color: var(--text-muted);
+  color: #13678A;
   font-size: 0.85rem;
 }
 
 .signup-date {
   font-weight: 600;
-  color: var(--primary-color);
+  color: #13678A;
 }
 
 .status-badge {
@@ -499,18 +508,20 @@ const getStatusText = (status) => {
 }
 
 .status-badge.pending {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #DAFDBA;
+  color: #13678A;
+  border: 1px solid #9AEBA3;
 }
 
 .status-badge.completed {
-  background: #d1fae5;
-  color: #065f46;
+  background: #45C4B0;
+  color: #012030;
+  font-weight: 600;
 }
 
 .status-badge.cancelled {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(1, 32, 48, 0.08);
+  color: #012030;
 }
 
 @media (max-width: 768px) {

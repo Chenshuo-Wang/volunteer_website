@@ -32,7 +32,7 @@ const close = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(1, 32, 48, 0.65);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -45,16 +45,27 @@ const close = () => {
   width: 90%;
   max-width: 500px;
   text-align: center;
+  border: 1px solid rgba(69, 196, 176, 0.35);
+  box-shadow: 0 16px 40px rgba(1, 32, 48, 0.2);
 }
+h2, h3 { color: #012030; }
+p, li { color: #13678A; }
 ul { text-align: left; margin: 20px; }
 li { margin-bottom: 10px; }
 button {
   padding: 12px 25px;
   font-size: 1em;
-  background-color: #007bff;
+  font-weight: 600;
+  background: linear-gradient(135deg, #13678A, #45C4B0);
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(19, 103, 138, 0.25);
+  transition: all 0.2s;
+}
+button:hover {
+  background: linear-gradient(135deg, #012030, #13678A);
+  transform: translateY(-2px);
 }
 </style>
