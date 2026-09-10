@@ -2,15 +2,30 @@
 
 export async function seedInitialData(db) {
   try {
-    // 1. 创建默认管理员账号
-    const existingAdmin = await db.queryOne('SELECT id FROM students WHERE phone = ?', ['admin']);
+    // 1. 创建或更新默认管理员账号 (电话: 123123, 密码: 123123)
+    const existingAdmin = await db.queryOne('SELECT id FROM students WHERE phone = ?', ['123123']);
     if (!existingAdmin) {
-      await db.execute(
-        `INSERT INTO students (name, phone, password, enrollment_year, class_number, is_admin)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        ['管理员', 'admin', 'admin123', 2020, 0, 1]
-      );
-      console.log('[SEED] 默认管理员已创建: admin / admin123');
+      const oldAdmin = await db.queryOne('SELECT id FROM students WHERE phone = ?', ['admin']);
+      if (oldAdmin) {
+        await db.execute('UPDATE students SET phone = ?, password = ?, is_admin = 1 WHERE id = ?', [
+          '123123',
+          '123123',
+          oldAdmin.id,
+        ]);
+        console.log('[SEED] 原管理员已更新为: 123123 / 123123');
+      } else {
+        await db.execute(
+          `INSERT INTO students (name, phone, password, enrollment_year, class_number, is_admin)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          ['管理员', '123123', '123123', 2020, 0, 1]
+        );
+        console.log('[SEED] 默认管理员已创建: 123123 / 123123');
+      }
+    } else {
+      await db.execute('UPDATE students SET password = ?, is_admin = 1 WHERE phone = ?', [
+        '123123',
+        '123123',
+      ]);
     }
 
     // 2. 检查是否已经有周常岗位数据

@@ -177,20 +177,22 @@ async function runAllTests() {
 
   await test('GET /api/admin/rotations - 管理员 Token 鉴权成功 (200)', async () => {
     const res = await request('/api/admin/rotations', {
-      headers: { 'X-Admin-Token': 'admin' },
+      headers: { 'X-Admin-Token': '123123' },
     });
     assertEqual(res.status, 200);
     assert(Array.isArray(res.body), 'Rotations should be array');
   });
 
   // 4. 周常轮值与岗位排班
-  const nextMonday = '2026-09-07';
+  const now = new Date();
+  const daysUntilNextMonday = ((1 + 7 - now.getDay()) % 7) || 7;
+  const nextMonday = new Date(now.getTime() + daysUntilNextMonday * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   await test('POST /api/admin/rotations - 设置周轮换班级', async () => {
     const res = await request('/api/admin/rotations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Admin-Token': 'admin',
+        'X-Admin-Token': '123123',
       },
       body: JSON.stringify({
         weekStartDate: nextMonday,
@@ -257,7 +259,7 @@ async function runAllTests() {
     assertEqual(dupRes.body.message, '您已经报名过该活动了');
 
     // 管理员报名凑满 2 人
-    const admin = await db.queryOne('SELECT id FROM students WHERE phone = ?', ['admin']);
+    const admin = await db.queryOne('SELECT id FROM students WHERE phone = ?', ['123123']);
     await db.execute(
       'INSERT INTO event_signups (student_id, event_id, signup_time) VALUES (?, ?, ?)',
       [admin.id, createdEventId, new Date().toISOString()]
@@ -304,7 +306,7 @@ async function runAllTests() {
   // 7. 管理员矩阵看板
   await test('GET /api/admin/shifts/signups - 获取周报名矩阵看板', async () => {
     const res = await request(`/api/admin/shifts/signups?week_start=${nextMonday}&class_name=2024-1`, {
-      headers: { 'X-Admin-Token': 'admin' },
+      headers: { 'X-Admin-Token': '123123' },
     });
     assertEqual(res.status, 200);
     assert(Array.isArray(res.body.columns), 'Columns should be array');
@@ -317,7 +319,7 @@ async function runAllTests() {
   // 8. 管理员学生列表
   await test('GET /api/admin/students - 获取所有学生列表', async () => {
     const res = await request('/api/admin/students', {
-      headers: { 'X-Admin-Token': 'admin' },
+      headers: { 'X-Admin-Token': '123123' },
     });
     assertEqual(res.status, 200);
     assert(Array.isArray(res.body), 'Students should be array');
