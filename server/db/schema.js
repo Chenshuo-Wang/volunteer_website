@@ -65,6 +65,17 @@ export function getCreateTablesSQL(isPostgres) {
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT unique_shift_signup UNIQUE (shift_id, date, student_id)
       );
+
+      CREATE TABLE IF NOT EXISTS makeup_records (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+        title VARCHAR(100) NOT NULL,
+        date VARCHAR(30) NOT NULL,
+        hours_value DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+        description TEXT,
+        event_id INTEGER,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      );
     `;
   }
 
@@ -131,6 +142,17 @@ export function getCreateTablesSQL(isPostgres) {
       status TEXT DEFAULT 'pending',
       created_at TEXT DEFAULT (datetime('now')),
       UNIQUE (shift_id, date, student_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS makeup_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      date TEXT NOT NULL,
+      hours_value REAL NOT NULL DEFAULT 1.0,
+      description TEXT,
+      event_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now'))
     );
   `;
 }

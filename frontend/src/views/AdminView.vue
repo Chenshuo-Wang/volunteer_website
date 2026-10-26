@@ -7,7 +7,7 @@
         </div>
         <div class="tabs">
           <button 
-            v-for="tab in ['活动管理', '工时审核', '学生数据', '周常管理']" 
+            v-for="tab in ['活动管理', '工时审核', '工时补录', '学生数据', '周常管理']" 
             :key="tab"
             class="tab-btn"
             :class="{ active: currentTab === tab }"
@@ -458,7 +458,299 @@
         </div>
       </div>
 
-      <!-- Tab 3: 学生数据 -->
+      <!-- Tab 3: 工时补录 -->
+      <div v-if="currentTab === '工时补录'" class="tab-content">
+        <div class="events-management-header">
+          <div>
+            <h3>志愿工时补录中心</h3>
+            <p class="section-desc">
+              用于补录历史活动、线下临时调配或单个学生的志愿服务时长。补录后直接计入学生总时长并在其个人主页展示为<strong>[补录]</strong>记录，不会污染活动大厅。
+            </p>
+          </div>
+          <div class="category-tabs">
+            <button
+              class="cat-tab-btn"
+              :class="{ active: makeupMode === 'event' }"
+              @click="makeupMode = 'event'"
+            >
+              📋 1. 按活动批量补录
+            </button>
+            <button
+              class="cat-tab-btn"
+              :class="{ active: makeupMode === 'student' }"
+              @click="makeupMode = 'student'"
+            >
+              👤 2. 按单个学生补录
+            </button>
+          </div>
+        </div>
+
+        <!-- 模式 1：按活动批量补录 -->
+        <div v-if="makeupMode === 'event'" class="makeup-panel">
+          <div class="makeup-step-card">
+            <div class="step-badge-header">
+              <span class="step-num">STEP 1</span>
+              <h4>设定补录活动信息</h4>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>快速关联已有活动（可选，也可直接手动填写下方信息）</label>
+                <select v-model="batchMakeupForm.selectedEventId" @change="handleSelectExistingEvent">
+                  <option value="">-- 自定义填写新补录活动（不绑定现有活动） --</option>
+                  <option v-for="ev in adminEvents" :key="ev.id" :value="ev.id">
+                    {{ ev.title }} （{{ ev.hoursValue }}h · {{ formatFullTime(ev.startTime) }}）
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 2;">
+                <label>活动名称 / 补录事由 *</label>
+                <input v-model="batchMakeupForm.title" placeholder="例如：2026秋季迎新志愿服务 / 图书馆突击整理" />
+              </div>
+              <div class="form-group">
+                <label>服务日期 *</label>
+                <input v-model="batchMakeupForm.date" type="date" />
+              </div>
+              <div class="form-group">
+                <label>每人补录工时 (小时) *</label>
+                <input v-model="batchMakeupForm.hoursValue" type="number" step="0.5" min="0.5" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>补录备注说明（选填）</label>
+              <input v-model="batchMakeupForm.description" placeholder="例如：线下纸质签到表补录、临时增援志愿者等" />
+            </div>
+          </div>
+
+          <div class="makeup-step-card">
+            <div class="step-badge-header">
+              <span class="step-num">STEP 2</span>
+              <h4>批量勾选参与学生（已选 {{ batchMakeupForm.studentIds.length }} 人）</h4>
+            </div>
+
+            <div class="filter-row makeup-filter-row">
+              <div class="search-box">
+                <label>按班级筛选:</label>
+                <select v-model="batchFilterClass">
+                  <option value="">全部班级</option>
+                  <option v-for="cls in uniqueClasses" :key="cls" :value="cls">{{ cls }}</option>
+                </select>
+              </div>
+              <div class="search-box">
+                <label>搜索姓名/手机:</label>
+                <input v-model="batchSearchQuery" type="text" placeholder="输入姓名或手机号过滤..." />
+              </div>
+              <div class="batch-select-actions">
+                <button type="button" @click="selectAllFilteredBatchStudents" class="btn-sm btn-secondary">
+                  全选当前筛选 ({{ batchFilteredStudents.length }})
+                </button>
+                <button type="button" @click="clearBatchSelectedStudents" class="btn-sm btn-reset">
+                  清空已选
+                </button>
+              </div>
+            </div>
+
+            <!-- 已选学生标签预览 -->
+            <div v-if="selectedBatchStudentObjects.length > 0" class="selected-pills-box">
+              <span class="pills-label">已选名单：</span>
+              <span v-for="stu in selectedBatchStudentObjects" :key="stu.id" class="stu-pill">
+                {{ stu.name }} ({{ stu.fullClassName }})
+                <button type="button" class="pill-remove" @click="toggleBatchStudent(stu.id)">×</button>
+              </span>
+            </div>
+
+            <div class="student-checkbox-grid">
+              <label
+                v-for="stu in batchFilteredStudents"
+                :key="stu.id"
+                class="student-check-card"
+                :class="{ checked: batchMakeupForm.studentIds.includes(stu.id) }"
+              >
+                <input
+                  type="checkbox"
+                  :value="stu.id"
+                  v-model="batchMakeupForm.studentIds"
+                />
+                <div class="stu-card-info">
+                  <span class="stu-card-name">{{ stu.name }}</span>
+                  <span class="stu-card-meta">{{ stu.fullClassName }} · 现有 {{ stu.totalHours }}h</span>
+                </div>
+              </label>
+              <div v-if="batchFilteredStudents.length === 0" class="empty-subtext" style="grid-column: 1 / -1;">
+                未找到匹配的学生
+              </div>
+            </div>
+
+            <div class="makeup-submit-bar">
+              <div class="submit-summary">
+                将为 <strong>{{ batchMakeupForm.studentIds.length }}</strong> 名学生每人补录
+                <strong>{{ batchMakeupForm.hoursValue || 0 }}</strong> 小时工时
+              </div>
+              <button
+                type="button"
+                @click="handleSubmitBatchMakeup"
+                class="btn-primary"
+                :disabled="makeupSubmitting"
+              >
+                {{ makeupSubmitting ? '正在提交补录...' : '✓ 确认批量补录工时' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 模式 2：按单个学生进行补录 -->
+        <div v-if="makeupMode === 'student'" class="makeup-panel">
+          <div class="makeup-two-col">
+            <!-- 左侧：查找并选择学生 -->
+            <div class="makeup-step-card">
+              <div class="step-badge-header">
+                <span class="step-num">STEP 1</span>
+                <h4>选择目标学生</h4>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>筛选班级</label>
+                  <select v-model="singleFilterClass">
+                    <option value="">全部班级</option>
+                    <option v-for="cls in uniqueClasses" :key="cls" :value="cls">{{ cls }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>搜索姓名或手机号</label>
+                  <input v-model="singleSearchQuery" type="text" placeholder="输入姓名或手机号..." />
+                </div>
+              </div>
+
+              <div class="single-student-list">
+                <div
+                  v-for="stu in singleFilteredStudents"
+                  :key="stu.id"
+                  class="single-stu-item"
+                  :class="{ active: singleMakeupForm.studentId === stu.id }"
+                  @click="selectSingleStudent(stu)"
+                >
+                  <div>
+                    <span class="stu-item-name">{{ stu.name }}</span>
+                    <span class="stu-item-class">{{ stu.fullClassName }}</span>
+                  </div>
+                  <div class="stu-item-right">
+                    <span class="stu-item-phone">{{ stu.phone }}</span>
+                    <span class="stu-item-hours">当前 {{ stu.totalHours }}h</span>
+                  </div>
+                </div>
+                <div v-if="singleFilteredStudents.length === 0" class="empty-subtext">
+                  无匹配学生
+                </div>
+              </div>
+            </div>
+
+            <!-- 右侧：填写补录详情 -->
+            <div class="makeup-step-card">
+              <div class="step-badge-header">
+                <span class="step-num">STEP 2</span>
+                <h4>填写补录项目详情</h4>
+              </div>
+
+              <div v-if="selectedSingleStudentObj" class="selected-target-banner">
+                <div>
+                  当前选中：<strong>{{ selectedSingleStudentObj.name }}</strong>
+                  （{{ selectedSingleStudentObj.fullClassName }} · {{ selectedSingleStudentObj.phone }}）
+                </div>
+                <span class="hours-chip">当前累计：{{ selectedSingleStudentObj.totalHours }} 小时</span>
+              </div>
+              <div v-else class="unselected-target-banner">
+                👈 请先在左侧列表中点击选择一名要补录的学生
+              </div>
+
+              <div class="form-group">
+                <label>补录项目名称 / 事由 *</label>
+                <input v-model="singleMakeupForm.title" placeholder="例如：校运会后勤保障补录 / 独立志愿任务" />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>服务日期 *</label>
+                  <input v-model="singleMakeupForm.date" type="date" />
+                </div>
+                <div class="form-group">
+                  <label>补录工时 (小时) *</label>
+                  <input v-model="singleMakeupForm.hoursValue" type="number" step="0.5" min="0.5" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>备注说明（选填）</label>
+                <textarea v-model="singleMakeupForm.description" rows="2" placeholder="填写补录原因或证明人信息..."></textarea>
+              </div>
+
+              <button
+                type="button"
+                @click="handleSubmitSingleMakeup"
+                class="btn-primary"
+                style="width: 100%; margin-top: 8px;"
+                :disabled="makeupSubmitting || !singleMakeupForm.studentId"
+              >
+                {{ makeupSubmitting ? '提交中...' : '✓ 确认给该学生补录工时' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部：近期工时补录台账记录 -->
+        <div class="makeup-history-section">
+          <div class="flex-between" style="margin-bottom: 12px;">
+            <h4 class="category-block-title" style="margin-bottom: 0;">
+              <span>📜 近期工时补录记录台账 ({{ makeupRecords.length }} 条)</span>
+            </h4>
+            <button @click="loadMakeupRecords" class="btn-sm btn-secondary">🔄 刷新记录</button>
+          </div>
+
+          <div class="table-container" v-if="makeupRecords.length > 0">
+            <table>
+              <thead>
+                <tr>
+                  <th>学生姓名</th>
+                  <th>班级</th>
+                  <th>补录项目 / 事由</th>
+                  <th>服务日期</th>
+                  <th>补录工时</th>
+                  <th>备注说明</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="rec in makeupRecords" :key="rec.id">
+                  <td class="font-bold">{{ rec.studentName }}</td>
+                  <td>{{ rec.className }}</td>
+                  <td>{{ rec.title }}</td>
+                  <td>{{ rec.date }}</td>
+                  <td class="font-bold text-primary">+{{ rec.hoursValue }}h</td>
+                  <td>{{ rec.description || '—' }}</td>
+                  <td>
+                    <button
+                      @click="handleDeleteMakeupRecord(rec)"
+                      class="btn-act btn-fail"
+                      title="撤销此条补录并扣减对应工时"
+                    >
+                      撤销补录
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="empty-block">
+            暂无工时补录记录
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: 学生数据 -->
       <div v-if="currentTab === '学生数据'" class="tab-content">
         <h3>学生时长统计</h3>
         
@@ -655,6 +947,183 @@ const matrixClassList = ref([]);
 // 学生数据筛选
 const searchName = ref('');
 const selectedClass = ref('');
+
+// 工时补录状态与方法
+const makeupMode = ref('event'); // 'event' | 'student'
+const makeupRecords = ref([]);
+const makeupSubmitting = ref(false);
+
+const todayDateStr = new Date().toISOString().split('T')[0];
+
+const batchMakeupForm = reactive({
+  selectedEventId: '',
+  title: '',
+  date: todayDateStr,
+  hoursValue: 2.0,
+  description: '',
+  studentIds: []
+});
+const batchFilterClass = ref('');
+const batchSearchQuery = ref('');
+
+const singleMakeupForm = reactive({
+  studentId: null,
+  title: '',
+  date: todayDateStr,
+  hoursValue: 1.0,
+  description: ''
+});
+const singleFilterClass = ref('');
+const singleSearchQuery = ref('');
+
+const batchFilteredStudents = computed(() => {
+  return students.value.filter((stu) => {
+    const classOk = !batchFilterClass.value || stu.fullClassName === batchFilterClass.value;
+    const q = batchSearchQuery.value.trim();
+    const queryOk = !q || stu.name.includes(q) || (stu.phone && stu.phone.includes(q));
+    return classOk && queryOk;
+  });
+});
+
+const selectedBatchStudentObjects = computed(() => {
+  const idSet = new Set(batchMakeupForm.studentIds);
+  return students.value.filter((s) => idSet.has(s.id));
+});
+
+const singleFilteredStudents = computed(() => {
+  return students.value.filter((stu) => {
+    const classOk = !singleFilterClass.value || stu.fullClassName === singleFilterClass.value;
+    const q = singleSearchQuery.value.trim();
+    const queryOk = !q || stu.name.includes(q) || (stu.phone && stu.phone.includes(q));
+    return classOk && queryOk;
+  });
+});
+
+const selectedSingleStudentObj = computed(() => {
+  if (!singleMakeupForm.studentId) return null;
+  return students.value.find((s) => s.id === singleMakeupForm.studentId) || null;
+});
+
+const handleSelectExistingEvent = () => {
+  if (!batchMakeupForm.selectedEventId) return;
+  const ev = adminEvents.value.find((e) => e.id === Number(batchMakeupForm.selectedEventId));
+  if (ev) {
+    batchMakeupForm.title = ev.title;
+    batchMakeupForm.hoursValue = ev.hoursValue;
+    if (ev.startTime) {
+      batchMakeupForm.date = new Date(ev.startTime).toISOString().split('T')[0];
+    }
+  }
+};
+
+const selectAllFilteredBatchStudents = () => {
+  const currentSet = new Set(batchMakeupForm.studentIds);
+  batchFilteredStudents.value.forEach((stu) => currentSet.add(stu.id));
+  batchMakeupForm.studentIds = Array.from(currentSet);
+};
+
+const clearBatchSelectedStudents = () => {
+  batchMakeupForm.studentIds = [];
+};
+
+const toggleBatchStudent = (id) => {
+  const idx = batchMakeupForm.studentIds.indexOf(id);
+  if (idx >= 0) {
+    batchMakeupForm.studentIds.splice(idx, 1);
+  } else {
+    batchMakeupForm.studentIds.push(id);
+  }
+};
+
+const selectSingleStudent = (stu) => {
+  singleMakeupForm.studentId = stu.id;
+};
+
+const loadMakeupRecords = async () => {
+  try {
+    const res = await apiClient.get('/admin/makeup');
+    makeupRecords.value = res.data || [];
+  } catch (err) {
+    console.error('加载补录记录失败:', err);
+  }
+};
+
+const handleSubmitBatchMakeup = async () => {
+  if (!batchMakeupForm.title.trim()) {
+    return alert('请填写活动名称或补录事由');
+  }
+  if (!batchMakeupForm.hoursValue || Number(batchMakeupForm.hoursValue) <= 0) {
+    return alert('请输入大于 0 的补录工时');
+  }
+  if (batchMakeupForm.studentIds.length === 0) {
+    return alert('请至少勾选一名参与学生');
+  }
+
+  makeupSubmitting.value = true;
+  try {
+    const res = await apiClient.post('/admin/makeup/event', {
+      title: batchMakeupForm.title.trim(),
+      date: batchMakeupForm.date,
+      hoursValue: Number(batchMakeupForm.hoursValue),
+      description: batchMakeupForm.description.trim(),
+      eventId: batchMakeupForm.selectedEventId ? Number(batchMakeupForm.selectedEventId) : null,
+      studentIds: batchMakeupForm.studentIds
+    });
+    alert(res.data?.message || '批量补录成功！');
+    batchMakeupForm.studentIds = [];
+    batchMakeupForm.selectedEventId = '';
+    batchMakeupForm.title = '';
+    batchMakeupForm.description = '';
+    await Promise.all([loadMakeupRecords(), loadStudents()]);
+  } catch (err) {
+    alert('批量补录失败: ' + (err.response?.data?.message || err.message));
+  } finally {
+    makeupSubmitting.value = false;
+  }
+};
+
+const handleSubmitSingleMakeup = async () => {
+  if (!singleMakeupForm.studentId) {
+    return alert('请先在左侧选择一名目标学生');
+  }
+  if (!singleMakeupForm.title.trim()) {
+    return alert('请填写补录项目名称或事由');
+  }
+  if (!singleMakeupForm.hoursValue || Number(singleMakeupForm.hoursValue) <= 0) {
+    return alert('请输入大于 0 的补录工时');
+  }
+
+  makeupSubmitting.value = true;
+  try {
+    const res = await apiClient.post('/admin/makeup/student', {
+      studentId: singleMakeupForm.studentId,
+      title: singleMakeupForm.title.trim(),
+      date: singleMakeupForm.date,
+      hoursValue: Number(singleMakeupForm.hoursValue),
+      description: singleMakeupForm.description.trim()
+    });
+    alert(res.data?.message || '学生工时补录成功！');
+    singleMakeupForm.title = '';
+    singleMakeupForm.description = '';
+    await Promise.all([loadMakeupRecords(), loadStudents()]);
+  } catch (err) {
+    alert('补录失败: ' + (err.response?.data?.message || err.message));
+  } finally {
+    makeupSubmitting.value = false;
+  }
+};
+
+const handleDeleteMakeupRecord = async (rec) => {
+  if (!confirm(`确定要撤销给「${rec.studentName}」补录的「${rec.title} (+${rec.hoursValue}h)」吗？撤销后该工时将从学生总时长中扣除。`)) {
+    return;
+  }
+  try {
+    await apiClient.delete(`/admin/makeup/${rec.id}`);
+    await Promise.all([loadMakeupRecords(), loadStudents()]);
+  } catch (err) {
+    alert('撤销失败: ' + (err.response?.data?.message || err.message));
+  }
+};
 
 const uniqueClasses = computed(() => {
   if (!students.value || students.value.length === 0) return [];
@@ -963,6 +1432,11 @@ onMounted(async () => {
 watch(currentTab, (newTab) => {
   if (newTab === '活动管理') loadAdminEvents();
   if (newTab === '工时审核') loadAttendance();
+  if (newTab === '工时补录') {
+    loadStudents();
+    loadAdminEvents();
+    loadMakeupRecords();
+  }
   if (newTab === '学生数据') loadStudents();
   if (newTab === '周常管理') {
     loadRotations();
@@ -1991,5 +2465,286 @@ thead .sticky-col {
 .status-closed {
   background: #ff7675;
   color: #ffffff;
+}
+
+/* ==================== 工时补录模块样式 ==================== */
+.makeup-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.makeup-step-card {
+  background: #ffffff;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  padding: 20px;
+  box-shadow: 4px 4px 0px #012030;
+}
+
+.step-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #012030;
+}
+
+.step-badge-header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #012030;
+}
+
+.step-num {
+  background: #012030;
+  color: #DAFDBA;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+
+.makeup-filter-row {
+  margin-bottom: 14px;
+}
+
+.batch-select-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.selected-pills-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f4f9f7;
+  border: 2px dashed #13678A;
+  margin-bottom: 14px;
+}
+
+.pills-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #13678A;
+}
+
+.stu-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: #DAFDBA;
+  border: 1.5px solid #012030;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #012030;
+  box-shadow: 2px 2px 0px #012030;
+}
+
+.pill-remove {
+  background: none;
+  border: none;
+  font-weight: 900;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: #012030;
+  padding: 0 2px;
+}
+
+.pill-remove:hover {
+  color: #d63031;
+}
+
+.student-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 2px solid #012030;
+  background: #f8fbfa;
+}
+
+.student-check-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 2px solid #012030;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.student-check-card:hover {
+  background: #f0fdf4;
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0px #012030;
+}
+
+.student-check-card.checked {
+  background: #DAFDBA;
+  border-color: #012030;
+  box-shadow: 3px 3px 0px #012030;
+}
+
+.student-check-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #012030;
+  cursor: pointer;
+}
+
+.stu-card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stu-card-name {
+  font-weight: 800;
+  color: #012030;
+  font-size: 0.95rem;
+}
+
+.stu-card-meta {
+  font-size: 0.78rem;
+  color: #13678A;
+  font-weight: 600;
+}
+
+.makeup-submit-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid #012030;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.submit-summary {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #012030;
+}
+
+.submit-summary strong {
+  color: #13678A;
+  font-size: 1.1rem;
+}
+
+.makeup-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+}
+
+@media (max-width: 820px) {
+  .makeup-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.single-student-list {
+  max-height: 330px;
+  overflow-y: auto;
+  border: 2px solid #012030;
+  background: #f8fbfa;
+  display: flex;
+  flex-direction: column;
+}
+
+.single-stu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1.5px solid #012030;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.single-stu-item:hover {
+  background: #f0fdf4;
+}
+
+.single-stu-item.active {
+  background: #45C4B0;
+  color: #012030;
+  font-weight: 800;
+}
+
+.stu-item-name {
+  font-weight: 800;
+  color: #012030;
+  margin-right: 8px;
+}
+
+.stu-item-class {
+  font-size: 0.82rem;
+  padding: 2px 6px;
+  background: #DAFDBA;
+  border: 1px solid #012030;
+  font-weight: 700;
+  color: #012030;
+}
+
+.stu-item-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.stu-item-phone {
+  color: #13678A;
+  font-weight: 600;
+}
+
+.stu-item-hours {
+  font-weight: 800;
+  color: #012030;
+}
+
+.selected-target-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #DAFDBA;
+  border: 2px solid #012030;
+  box-shadow: 3px 3px 0px #012030;
+  margin-bottom: 16px;
+  color: #012030;
+  font-weight: 700;
+}
+
+.unselected-target-banner {
+  padding: 12px 14px;
+  background: #fff3cd;
+  border: 2px dashed #012030;
+  margin-bottom: 16px;
+  color: #012030;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.makeup-history-section {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 2px solid #012030;
 }
 </style>

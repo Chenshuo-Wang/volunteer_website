@@ -476,4 +476,146 @@ adminRouter.post('/attendance/batch', async (c) => {
   }
 });
 
+// ==================== 工时补录模块 ====================
+
+// 获取所有补录历史记录
+adminRouter.get('/makeup', async (c) => {
+  try {
+    const records = await db.query(
+      `SELECT m.*, s.name as student_name, s.phone, s.enrollment_year, s.class_number
+       FROM makeup_records m
+       JOIN students s ON s.id = m.student_id
+       ORDER BY m.created_at DESC, m.id DESC`
+    );
+
+    const formatted = records.map((r) => ({
+      id: r.id,
+      studentId: r.student_id,
+      studentName: r.student_name,
+      phone: r.phone,
+      className: `${r.enrollment_year}级${r.class_number}班`,
+      title: r.title,
+      date: r.date,
+      hoursValue: Number(r.hours_value || 0),
+      description: r.description || '',
+      eventId: r.event_id || null,
+      createdAt: r.created_at,
+    }));
+
+    return c.json(formatted);
+  } catch (err) {
+    console.error('[GET MAKEUP RECORDS ERROR]', err);
+    return c.json({ message: `获取补录记录失败: ${err.message}` }, 500);
+  }
+});
+
+// 按活动批量补录工时
+adminRouter.post('/makeup/event', async (c) => {
+  const data = await c.req.json();
+  let title = data.title ? String(data.title).trim() : '';
+  let date = data.date ? String(data.date).trim() : '';
+  let hoursValue = parseFloat(data.hoursValue);
+  const description = data.description ? String(data.description).trim() : '';
+  const eventId = data.eventId ? Number(data.eventId) : null;
+  const studentIds = Array.isArray(data.studentIds) ? data.studentIds.map(Number).filter(Boolean) : [];
+
+  // 如果关联了已有活动且未手动指定部分字段，从已有活动读取默认值
+  if (eventId) {
+    const ev = await db.queryOne('SELECT * FROM events WHERE id = ?', [eventId]);
+    if (ev) {
+      if (!title) title = ev.title;
+      if (!date) date = new Date(ev.start_time).toISOString().slice(0, 10);
+      if (isNaN(hoursValue) || hoursValue <= 0) hoursValue = Number(ev.hours_value || 1.0);
+    }
+  }
+
+  if (!title || !date || isNaN(hoursValue) || hoursValue <= 0) {
+    return c.json({ message: '请完整填写活动名称、日期和有效的志愿工时' }, 400);
+  }
+
+  if (studentIds.length === 0) {
+    return c.json({ message: '请至少选择一名参与学生' }, 400);
+  }
+
+  try {
+    const nowIso = new Date().toISOString();
+    let insertedCount = 0;
+
+    for (const sid of studentIds) {
+      await db.execute(
+        `INSERT INTO makeup_records (student_id, title, date, hours_value, description, event_id, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [sid, title, date, hoursValue, description || null, eventId, nowIso]
+      );
+      insertedCount++;
+    }
+
+    return c.json(
+      {
+        message: `批量补录成功！已为 ${insertedCount} 名学生发放工时`,
+        count: insertedCount,
+      },
+      201
+    );
+  } catch (err) {
+    console.error('[MAKEUP BATCH EVENT ERROR]', err);
+    return c.json({ message: `批量补录失败: ${err.message}` }, 500);
+  }
+});
+
+// 按单个学生补录工时
+adminRouter.post('/makeup/student', async (c) => {
+  const data = await c.req.json();
+  const studentId = Number(data.studentId);
+  const title = data.title ? String(data.title).trim() : '';
+  const date = data.date ? String(data.date).trim() : '';
+  const hoursValue = parseFloat(data.hoursValue);
+  const description = data.description ? String(data.description).trim() : '';
+  const eventId = data.eventId ? Number(data.eventId) : null;
+
+  if (!studentId || !title || !date || isNaN(hoursValue) || hoursValue <= 0) {
+    return c.json({ message: '请选择学生并完整填写补录项目名称、日期及有效工时' }, 400);
+  }
+
+  const student = await db.queryOne('SELECT id, name FROM students WHERE id = ?', [studentId]);
+  if (!student) {
+    return c.json({ message: '目标学生不存在' }, 404);
+  }
+
+  try {
+    const res = await db.execute(
+      `INSERT INTO makeup_records (student_id, title, date, hours_value, description, event_id, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [studentId, title, date, hoursValue, description || null, eventId, new Date().toISOString()]
+    );
+
+    return c.json(
+      {
+        message: `已成功为 ${student.name} 补录 ${hoursValue} 小时工时！`,
+        id: res.id,
+      },
+      201
+    );
+  } catch (err) {
+    console.error('[MAKEUP SINGLE STUDENT ERROR]', err);
+    return c.json({ message: `单人补录失败: ${err.message}` }, 500);
+  }
+});
+
+// 撤销/删除某条补录记录
+adminRouter.delete('/makeup/:id', async (c) => {
+  const recordId = Number(c.req.param('id'));
+  if (!recordId) {
+    return c.json({ message: '缺少记录ID' }, 400);
+  }
+
+  const existing = await db.queryOne('SELECT id FROM makeup_records WHERE id = ?', [recordId]);
+  if (!existing) {
+    return c.json({ message: '补录记录不存在' }, 404);
+  }
+
+  await db.execute('DELETE FROM makeup_records WHERE id = ?', [recordId]);
+  return c.json({ message: '补录记录已撤销删除' });
+});
+
 export default adminRouter;

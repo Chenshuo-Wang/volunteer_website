@@ -23,7 +23,16 @@ export async function getStudentTotalHours(studentId) {
   );
   const shiftHours = Number(shiftRes?.sum_hours || 0);
 
-  return Math.round((eventHours + shiftHours) * 10) / 10;
+  // 3. 补录工时: 管理员补录的记录直接生效
+  const makeupRes = await db.queryOne(
+    `SELECT SUM(hours_value) as sum_hours
+     FROM makeup_records
+     WHERE student_id = ?`,
+    [studentId]
+  );
+  const makeupHours = Number(makeupRes?.sum_hours || 0);
+
+  return Math.round((eventHours + shiftHours + makeupHours) * 10) / 10;
 }
 
 // 获取学生历史记录
@@ -111,7 +120,25 @@ export async function getStudentHistory(studentId) {
     });
   }
 
-  // C. 按日期倒序
+  // C. 补录工时记录
+  const makeups = await db.query(
+    `SELECT * FROM makeup_records WHERE student_id = ?`,
+    [studentId]
+  );
+
+  for (const m of makeups) {
+    historyList.push({
+      type: 'makeup',
+      id: m.id,
+      title: `${m.title} [补录]`,
+      hours: Number(m.hours_value || 0),
+      hoursValue: Number(m.hours_value || 0),
+      date: m.date,
+      status: '已完成',
+    });
+  }
+
+  // D. 按日期倒序
   historyList.sort((a, b) => (a.date < b.date ? 1 : -1));
   return historyList;
 }
