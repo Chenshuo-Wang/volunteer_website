@@ -19,6 +19,9 @@
   --text-color: #012030;
   --text-secondary: #13678A;
 
+  /* 全局背景底色 (纯色) */
+  --bg-color: #f8f9fa;
+
   /* 硬朗现代结构尺寸与投影 */
   --card-radius: 2px;
   --hard-border: 2px solid #012030;
@@ -29,11 +32,20 @@
   --transition-speed: 0.15s;
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background: linear-gradient(135deg, rgba(218, 253, 186, 0.45) 0%, #ffffff 50%, rgba(154, 235, 163, 0.3) 100%);
+  background-color: var(--bg-color);
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--text-main);
   line-height: 1.6;
 }
@@ -42,6 +54,10 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* 硬朗实体卡片工具类 */

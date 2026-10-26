@@ -1,7 +1,7 @@
 <template>
   <div class="home-container">
     <div class="hero-section glass-panel">
-      <h1>👋 欢迎来到校园志愿星火</h1>
+      <h1>欢迎来到校园志愿星火</h1>
       <p class="subtitle">连接爱心，服务校园，记录你的每一份贡献</p>
       
       <div class="action-buttons">
@@ -56,9 +56,7 @@ h1 {
   font-size: 2.5rem;
   font-weight: 900;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #012030 0%, #13678A 55%, #45C4B0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--c-dark);
   margin-bottom: 16px;
 }
 

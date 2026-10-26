@@ -3,7 +3,15 @@ import { db } from '../db/index.js';
 import { adminRequired } from '../middleware/auth.js';
 import { formatStudent } from '../services/studentService.js';
 import { createEvent } from './events.js';
+import { formatEvent } from '../services/eventService.js';
 import { getWeekRange, formatShift } from '../services/shiftService.js';
+import {
+  getAttendanceGrouped,
+  updateEventSignupStatus,
+  updateShiftSignupStatus,
+  batchUpdateEventAttendance,
+  batchUpdateShiftAttendance,
+} from '../services/attendanceService.js';
 
 const adminRouter = new Hono();
 
@@ -73,6 +81,21 @@ adminRouter.get('/students', async (c) => {
   return c.json(studentList);
 });
 
+// 管理员获取所有活动列表（附带报名人数与状态）
+adminRouter.get('/events', async (c) => {
+  const events = await db.query('SELECT * FROM events ORDER BY start_time DESC');
+  const formattedEvents = [];
+  for (const e of events) {
+    const signupCountRes = await db.queryOne(
+      'SELECT COUNT(*) as cnt FROM event_signups WHERE event_id = ?',
+      [e.id]
+    );
+    const signupCount = Number(signupCountRes?.cnt || 0);
+    formattedEvents.push(formatEvent(e, signupCount));
+  }
+  return c.json(formattedEvents);
+});
+
 // 管理员创建活动
 adminRouter.post('/events', async (c) => {
   const data = await c.req.json();
@@ -83,6 +106,96 @@ adminRouter.post('/events', async (c) => {
     console.error('[ADMIN CREATE EVENT ERROR]', err);
     return c.json({ message: err.message }, 500);
   }
+});
+
+// 管理员修改活动
+adminRouter.put('/events/:id', async (c) => {
+  const eventId = Number(c.req.param('id'));
+  if (!eventId) {
+    return c.json({ message: '缺少活动ID' }, 400);
+  }
+
+  const existing = await db.queryOne('SELECT * FROM events WHERE id = ?', [eventId]);
+  if (!existing) {
+    return c.json({ message: '活动不存在' }, 404);
+  }
+
+  const data = await c.req.json();
+
+  const title = data.title !== undefined ? String(data.title).trim() : existing.title;
+  const description = data.description !== undefined ? String(data.description) : (existing.description || '');
+  const startTime = data.startTime ? new Date(data.startTime).toISOString() : existing.start_time;
+  const endTime = data.endTime ? new Date(data.endTime).toISOString() : existing.end_time;
+  const regDeadline = data.registrationDeadline ? new Date(data.registrationDeadline).toISOString() : existing.registration_deadline;
+  const location = data.location !== undefined ? String(data.location).trim() : (existing.location || '');
+  const leaderName = data.leaderName !== undefined ? data.leaderName : existing.leader_name;
+  const leaderContact = data.leaderContact !== undefined ? data.leaderContact : existing.leader_contact;
+  const requiredVolunteers = data.requiredVolunteers !== undefined ? parseInt(data.requiredVolunteers, 10) : existing.required_volunteers;
+  const gradeLimit = data.gradeLimit || data.gradeRestriction || existing.grade_limit || 'ALL';
+  const hoursValue = data.hoursValue !== undefined ? parseFloat(data.hoursValue) : existing.hours_value;
+
+  try {
+    await db.execute(
+      `UPDATE events
+       SET title = ?, description = ?, start_time = ?, end_time = ?, registration_deadline = ?,
+           location = ?, leader_name = ?, leader_contact = ?, required_volunteers = ?,
+           grade_limit = ?, hours_value = ?
+       WHERE id = ?`,
+      [
+        title,
+        description,
+        startTime,
+        endTime,
+        regDeadline,
+        location,
+        leaderName,
+        leaderContact,
+        requiredVolunteers,
+        gradeLimit,
+        hoursValue,
+        eventId,
+      ]
+    );
+
+    const updatedEvent = await db.queryOne('SELECT * FROM events WHERE id = ?', [eventId]);
+    const signupCountRes = await db.queryOne(
+      'SELECT COUNT(*) as cnt FROM event_signups WHERE event_id = ?',
+      [eventId]
+    );
+    const signupCount = Number(signupCountRes?.cnt || 0);
+
+    return c.json({
+      message: '活动修改成功！',
+      event: formatEvent(updatedEvent, signupCount),
+    });
+  } catch (err) {
+    console.error('[ADMIN UPDATE EVENT ERROR]', err);
+    return c.json({ message: `修改活动失败: ${err.message}` }, 500);
+  }
+});
+
+// 管理员删除单个活动
+adminRouter.delete('/events/:id', async (c) => {
+  const eventId = Number(c.req.param('id'));
+  if (!eventId) {
+    return c.json({ message: '缺少活动ID' }, 400);
+  }
+
+  const event = await db.queryOne('SELECT * FROM events WHERE id = ?', [eventId]);
+  if (!event) {
+    return c.json({ message: '活动不存在' }, 404);
+  }
+
+  await db.execute('DELETE FROM event_signups WHERE event_id = ?', [eventId]);
+  await db.execute('DELETE FROM events WHERE id = ?', [eventId]);
+  return c.json({ message: '活动删除成功' });
+});
+
+// 管理员清空所有活动
+adminRouter.delete('/events', async (c) => {
+  await db.execute('DELETE FROM event_signups');
+  await db.execute('DELETE FROM events');
+  return c.json({ message: '所有活动及报名记录已清空' });
 });
 
 // 管理周常岗位：获取所有岗位
@@ -288,6 +401,79 @@ adminRouter.get('/shifts/signups', async (c) => {
     classList,
     weekStart: weekStartStr,
   });
+});
+
+// 1. 获取考勤与工时审核数据（按活动/周常项目分类）
+adminRouter.get('/attendance', async (c) => {
+  try {
+    const data = await getAttendanceGrouped();
+    return c.json(data);
+  } catch (err) {
+    console.error('[GET ATTENDANCE ERROR]', err);
+    return c.json({ message: `获取考勤数据失败: ${err.message}` }, 500);
+  }
+});
+
+// 2. 更新单个活动参与者状态
+adminRouter.put('/attendance/event-signup', async (c) => {
+  const data = await c.req.json();
+  const signupId = Number(data.signupId);
+  const status = String(data.status);
+
+  if (!signupId || !status) {
+    return c.json({ message: '缺少参数' }, 400);
+  }
+
+  try {
+    const res = await updateEventSignupStatus(signupId, status);
+    return c.json({ message: '更新成功', ...res });
+  } catch (err) {
+    return c.json({ message: err.message }, 400);
+  }
+});
+
+// 3. 更新单个周常参与者状态
+adminRouter.put('/attendance/shift-signup', async (c) => {
+  const data = await c.req.json();
+  const signupId = Number(data.signupId);
+  const status = String(data.status);
+
+  if (!signupId || !status) {
+    return c.json({ message: '缺少参数' }, 400);
+  }
+
+  try {
+    const res = await updateShiftSignupStatus(signupId, status);
+    return c.json({ message: '更新成功', ...res });
+  } catch (err) {
+    return c.json({ message: err.message }, 400);
+  }
+});
+
+// 4. 批量更新考勤状态
+adminRouter.post('/attendance/batch', async (c) => {
+  const data = await c.req.json();
+  const { type, id, date, status } = data;
+
+  if (!type || !status) {
+    return c.json({ message: '缺少必填参数' }, 400);
+  }
+
+  try {
+    if (type === 'event') {
+      const eventId = Number(id);
+      await batchUpdateEventAttendance(eventId, status);
+      return c.json({ message: '活动参与者考勤已批量更新' });
+    } else if (type === 'shift') {
+      const shiftId = Number(id);
+      await batchUpdateShiftAttendance(shiftId, date, status);
+      return c.json({ message: '周常参与者考勤已批量更新' });
+    } else {
+      return c.json({ message: '未知的项目类型' }, 400);
+    }
+  } catch (err) {
+    return c.json({ message: err.message }, 500);
+  }
 });
 
 export default adminRouter;

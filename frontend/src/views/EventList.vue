@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <header class="page-header">
-      <h1>📅 校园活动</h1>
+      <h1>校园活动</h1>
       <p>发现更多有趣的志愿机会</p>
     </header>
 

@@ -54,6 +54,13 @@ export const db = {
       // 执行建表 DDL
       const ddl = getCreateTablesSQL(true);
       await pgPool.query(ddl);
+      try {
+        await pgPool.query(
+          `ALTER TABLE event_signups ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'signed_up'`
+        );
+      } catch (e) {
+        console.error('[DB PG MIGRATION WARNING]', e.message);
+      }
       console.log('[DB] PostgreSQL 连接并初始化表结构成功');
     } else {
       isPostgres = false;
@@ -77,6 +84,19 @@ export const db = {
 
       const ddl = getCreateTablesSQL(false);
       sqliteDb.exec(ddl);
+
+      // 检查并自动迁移 event_signups 表的 status 列
+      try {
+        const pragma = sqliteDb.prepare("PRAGMA table_info(event_signups)").all();
+        const hasStatus = pragma.some((col) => col.name === 'status');
+        if (!hasStatus) {
+          sqliteDb.exec("ALTER TABLE event_signups ADD COLUMN status TEXT DEFAULT 'signed_up'");
+          console.log('[DB] event_signups 表已自动添加 status 列');
+        }
+      } catch (e) {
+        console.error('[DB MIGRATION WARNING]', e.message);
+      }
+
       console.log(`[DB] SQLite 初始化成功 (${dbFile})`);
     }
 

@@ -181,7 +181,7 @@ shiftsRouter.post('/:id/signup', async (c) => {
   try {
     const res = await db.execute(
       `INSERT INTO shift_signups (student_id, shift_id, date, status, created_at)
-       VALUES (?, ?, ?, 'pending', ?)`,
+       VALUES (?, ?, ?, 'signed_up', ?)`,
       [studentId, shiftId, signupDateStr, new Date().toISOString()]
     );
 

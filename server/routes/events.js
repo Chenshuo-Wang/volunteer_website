@@ -143,8 +143,8 @@ eventsRouter.post('/:id/signup', async (c) => {
   // 4. 执行报名
   try {
     await db.execute(
-      `INSERT INTO event_signups (student_id, event_id, signup_time)
-       VALUES (?, ?, ?)`,
+      `INSERT INTO event_signups (student_id, event_id, signup_time, status)
+       VALUES (?, ?, ?, 'signed_up')`,
       [student.id, event.id, new Date().toISOString()]
     );
     return c.json({ message: '报名成功！' }, 201);

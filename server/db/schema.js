@@ -35,6 +35,7 @@ export function getCreateTablesSQL(isPostgres) {
         student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
         event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
         signup_time TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(20) DEFAULT 'signed_up',
         CONSTRAINT unique_event_signup UNIQUE (student_id, event_id)
       );
 
@@ -101,6 +102,7 @@ export function getCreateTablesSQL(isPostgres) {
       student_id INTEGER NOT NULL,
       event_id INTEGER NOT NULL,
       signup_time TEXT DEFAULT (datetime('now')),
+      status TEXT DEFAULT 'signed_up',
       UNIQUE (student_id, event_id)
     );
 

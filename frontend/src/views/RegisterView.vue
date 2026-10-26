@@ -2,7 +2,7 @@
   <div class="container register-container">
     <div class="glass-panel register-card">
       <div class="register-header">
-        <h2>📝 学生注册</h2>
+        <h2>学生注册</h2>
         <p>填写信息创建账号</p>
       </div>
 

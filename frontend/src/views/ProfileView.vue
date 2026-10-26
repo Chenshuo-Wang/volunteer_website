@@ -17,11 +17,18 @@
           <div v-if="profile.qq" class="info-row">🐧 {{ profile.qq }}</div>
           <div v-if="profile.wechat" class="info-row">💬 {{ profile.wechat }}</div>
         </div>
+
+        <button @click="handleLogout" class="btn-logout-profile" title="退出当前登录账号">
+          <svg class="logout-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+          </svg>
+          退出登录
+        </button>
       </div>
 
       <!-- Middle: Password Change -->
       <div class="glass-panel password-card">
-        <h3>🔐 修改密码</h3>
+        <h3>修改密码</h3>
         <form @submit.prevent="handlePasswordChange" class="password-form">
           <div class="form-group">
             <label>旧密码</label>
@@ -45,7 +52,7 @@
 
       <!-- Right: History -->
       <div class="glass-panel history-card">
-        <h3>📄 志愿履历</h3>
+        <h3>志愿履历</h3>
         <div v-if="profile.history && profile.history.length > 0" class="history-list">
           <div 
             v-for="(item, index) in profile.history" 
@@ -58,7 +65,15 @@
             </div>
             <div class="history-right">
               <span class="hours-badge">+{{ item.hours }}h</span>
-              <span class="status-text" :class="item.status === '已结束' || item.status === '已完成' ? 'text-green' : 'text-gray'">
+              <span 
+                class="status-text" 
+                :class="{
+                  'text-green': item.status === '已完成',
+                  'text-orange': item.status === '待确认',
+                  'text-red': item.status === '未完成',
+                  'text-gray': item.status === '已报名' || item.status === '已参加'
+                }"
+              >
                 {{ item.status }}
               </span>
             </div>
@@ -116,6 +131,11 @@ onMounted(async () => {
 
 const formatDate = (isoString) => {
   return new Date(isoString).toLocaleDateString('zh-CN');
+};
+
+const handleLogout = () => {
+  store.logout();
+  router.push('/login');
 };
 
 const handlePasswordChange = async () => {
@@ -304,6 +324,8 @@ const handlePasswordChange = async () => {
   font-size: 0.8rem;
 }
 .text-green { color: #13678A; font-weight: 700; }
+.text-orange { color: #e17055; font-weight: 700; }
+.text-red { color: #d63031; font-weight: 700; }
 .text-gray { color: #012030; font-weight: 500; opacity: 0.6; }
 
 .empty-history {
@@ -374,5 +396,44 @@ const handlePasswordChange = async () => {
   margin-bottom: 12px;
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.btn-logout-profile {
+  width: 100%;
+  margin-top: 24px;
+  padding: 10px 16px;
+  background: #ffffff;
+  color: #012030;
+  border: 2px solid #012030;
+  border-radius: 2px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 3px 3px 0px #012030;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.btn-logout-profile .logout-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.btn-logout-profile:hover {
+  background: #ffe3e3;
+  color: #d63031;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #012030;
+}
+
+.btn-logout-profile:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #012030;
 }
 </style>

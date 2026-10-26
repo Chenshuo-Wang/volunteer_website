@@ -39,6 +39,17 @@
         </div>
       </div>
 
+      <!-- 管理员专属快捷操作 -->
+      <div v-if="store.user?.isAdmin" class="admin-quick-actions">
+        <span class="admin-tip">🛡️ 管理员快捷权限：</span>
+        <router-link 
+          :to="{ path: '/admin', query: { tab: '活动管理', editId: event.id } }" 
+          class="btn-admin-edit"
+        >
+          ✏️ 编辑修改此活动
+        </router-link>
+      </div>
+
       <div class="action-section">
         <button 
           v-if="store.user" 
@@ -223,5 +234,45 @@ const handleSignup = async () => {
 .login-prompt p {
   color: #13678A;
   margin-bottom: 12px;
+}
+
+/* 管理员快捷操作入口 */
+.admin-quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fbfb;
+  border: 2px solid #012030;
+  box-shadow: 3px 3px 0px #012030;
+  border-radius: 2px;
+  padding: 12px 18px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-tip {
+  font-weight: 800;
+  color: #012030;
+  font-size: 0.95rem;
+}
+
+.btn-admin-edit {
+  background: #DAFDBA;
+  color: #012030;
+  border: 2px solid #012030;
+  padding: 8px 18px;
+  font-weight: 800;
+  border-radius: 2px;
+  text-decoration: none;
+  box-shadow: 2px 2px 0px #012030;
+  display: inline-block;
+  transition: all 0.15s;
+}
+
+.btn-admin-edit:hover {
+  background: #45C4B0;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #012030;
 }
 </style>

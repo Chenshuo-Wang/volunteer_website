@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <header class="page-header">
-      <h1>🗓️ 周常岗位值日</h1>
+      <h1>周常岗位值日</h1>
       <p>固定时间的志愿服务，培养每日坚持的好习惯</p>
     </header>
 
@@ -77,7 +77,7 @@
 
     <!-- 我的报名记录 -->
     <div v-if="mySignups.length > 0" class="my-signups glass-panel">
-      <h3>📋 我的周常任务报名</h3>
+      <h3>我的周常任务报名</h3>
       <div class="signup-list">
         <div v-for="signup in mySignups" :key="signup.id" class="signup-item">
           <div class="signup-info">
@@ -282,9 +282,11 @@ const formatDate = (dateStr) => {
 // 获取状态文本
 const getStatusText = (status) => {
   const statusMap = {
-    'pending': '待完成',
+    'signed_up': '已报名',
+    'pending': '待确认',
     'completed': '已完成',
-    'cancelled': '已取消'
+    'uncompleted': '未完成',
+    'cancelled': '已取消',
   };
   return statusMap[status] || status;
 };
