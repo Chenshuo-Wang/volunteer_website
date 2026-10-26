@@ -20,15 +20,17 @@
         <div class="glass-panel event-card">
           <div class="card-header">
             <StatusBadge :status="event.status" />
-            <span class="hours-tag">⏱️ {{ event.hoursValue }} 小时</span>
+            <span class="hours-tag">
+              <Clock :size="14" :stroke-width="2.5" class="icon-inline" /> {{ event.hoursValue }} 小时
+            </span>
           </div>
           
           <h3>{{ event.title }}</h3>
           
           <div class="card-meta">
-            <div class="meta-item">📍 {{ event.location }}</div>
-            <div class="meta-item">🕒 {{ formatDate(event.startTime) }}</div>
-            <div class="meta-item">👥 {{ event.currentVolunteers }} / {{ event.requiredVolunteers }} 人</div>
+            <div class="meta-item"><MapPin :size="15" :stroke-width="2.3" class="icon-inline" /> {{ event.location }}</div>
+            <div class="meta-item"><Clock :size="15" :stroke-width="2.3" class="icon-inline" /> {{ formatDate(event.startTime) }}</div>
+            <div class="meta-item"><Users :size="15" :stroke-width="2.3" class="icon-inline" /> {{ event.currentVolunteers }} / {{ event.requiredVolunteers }} 人</div>
           </div>
         </div>
       </router-link>
@@ -44,6 +46,7 @@
 import { ref, onMounted } from 'vue';
 import apiClient from '../services/api';
 import StatusBadge from '../components/StatusBadge.vue';
+import { Clock, MapPin, Users } from '../components/icons';
 
 const events = ref([]);
 const loading = ref(true);

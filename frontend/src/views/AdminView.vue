@@ -32,10 +32,10 @@
           </div>
           <div class="header-btn-group">
             <button @click="loadAdminEvents" class="btn-sm btn-secondary" :disabled="loadingEvents">
-              {{ loadingEvents ? '加载中...' : '🔄 刷新列表' }}
+              <RefreshCw :size="15" :stroke-width="2.4" class="icon-inline" /> {{ loadingEvents ? '加载中...' : '刷新列表' }}
             </button>
             <button @click="openCreateEventModal" class="btn-sm btn-primary">
-              ➕ 发布新活动
+              <Plus :size="16" :stroke-width="2.6" class="icon-inline" /> 发布新活动
             </button>
           </div>
         </div>
@@ -60,41 +60,41 @@
                 </span>
                 <h4 class="event-card-title">{{ ev.title }}</h4>
               </div>
-              <span class="hours-tag">⏱️ {{ ev.hoursValue }} 小时</span>
+              <span class="hours-tag"><Clock :size="14" :stroke-width="2.4" class="icon-inline" /> {{ ev.hoursValue }} 小时</span>
             </div>
 
             <p v-if="ev.description" class="event-card-desc">{{ ev.description }}</p>
 
             <div class="event-card-details">
               <div class="detail-line">
-                <span class="detail-label">📍 地点：</span><strong>{{ ev.location || '未填写' }}</strong>
+                <span class="detail-label"><MapPin :size="14" :stroke-width="2.3" class="icon-inline" /> 地点：</span><strong>{{ ev.location || '未填写' }}</strong>
               </div>
               <div class="detail-line">
-                <span class="detail-label">🕒 活动时间：</span><span>{{ formatFullTime(ev.startTime) }} 至 {{ formatFullTime(ev.endTime) }}</span>
+                <span class="detail-label"><Clock :size="14" :stroke-width="2.3" class="icon-inline" /> 活动时间：</span><span>{{ formatFullTime(ev.startTime) }} 至 {{ formatFullTime(ev.endTime) }}</span>
               </div>
               <div class="detail-line">
-                <span class="detail-label">⏰ 报名截止：</span><span>{{ formatFullTime(ev.registrationDeadline) }}</span>
+                <span class="detail-label"><Hourglass :size="14" :stroke-width="2.3" class="icon-inline" /> 报名截止：</span><span>{{ formatFullTime(ev.registrationDeadline) }}</span>
               </div>
               <div class="detail-line">
-                <span class="detail-label">👥 招募名额：</span><strong>{{ ev.currentVolunteers }} / {{ ev.requiredVolunteers }} 人</strong>
+                <span class="detail-label"><Users :size="14" :stroke-width="2.3" class="icon-inline" /> 招募名额：</span><strong>{{ ev.currentVolunteers }} / {{ ev.requiredVolunteers }} 人</strong>
                 <span v-if="ev.gradeLimit && ev.gradeLimit !== 'ALL'" class="grade-limit-tag">
                   (限 {{ ev.gradeLimit }} 级)
                 </span>
               </div>
               <div v-if="ev.leaderName" class="detail-line">
-                <span class="detail-label">👤 负责人：</span><span>{{ ev.leaderName }} {{ ev.leaderContact ? `(${ev.leaderContact})` : '' }}</span>
+                <span class="detail-label"><User :size="14" :stroke-width="2.3" class="icon-inline" /> 负责人：</span><span>{{ ev.leaderName }} {{ ev.leaderContact ? `(${ev.leaderContact})` : '' }}</span>
               </div>
             </div>
 
             <div class="admin-event-actions">
               <router-link :to="`/events/${ev.id}`" class="btn-sm btn-secondary" target="_blank">
-                👁️ 查看前台
+                <Eye :size="14" :stroke-width="2.3" class="icon-inline" /> 查看前台
               </router-link>
               <button @click="openEditEventModal(ev)" class="btn-sm btn-edit-event">
-                ✏️ 修改活动
+                <Pencil :size="14" :stroke-width="2.3" class="icon-inline" /> 修改活动
               </button>
               <button @click="handleDeleteEvent(ev)" class="btn-sm btn-delete-event">
-                🗑️ 删除活动
+                <Trash2 :size="14" :stroke-width="2.3" class="icon-inline" /> 删除活动
               </button>
             </div>
           </div>
@@ -104,7 +104,11 @@
         <div v-if="isEventModalOpen" class="modal-backdrop" @click.self="closeEventModal">
           <div class="glass-panel modal-card">
             <div class="modal-header">
-              <h3>{{ isEditingEvent ? '✏️ 修改活动详情' : '➕ 发布新校园活动' }}</h3>
+              <h3>
+                <Pencil v-if="isEditingEvent" :size="18" :stroke-width="2.4" class="icon-inline" />
+                <Plus v-else :size="18" :stroke-width="2.6" class="icon-inline" />
+                {{ isEditingEvent ? '修改活动详情' : '发布新校园活动' }}
+              </h3>
               <button @click="closeEventModal" class="btn-close-modal" aria-label="关闭">&times;</button>
             </div>
 
@@ -191,7 +195,7 @@
             </p>
           </div>
           <button @click="loadAttendance" class="btn-sm btn-secondary" :disabled="attendanceLoading">
-            {{ attendanceLoading ? '刷新中...' : '🔄 刷新考勤数据' }}
+            <RefreshCw :size="15" :stroke-width="2.4" class="icon-inline" /> {{ attendanceLoading ? '刷新中...' : '刷新考勤数据' }}
           </button>
         </div>
 
@@ -253,7 +257,7 @@
           <!-- 1. 校园活动分类展示 -->
           <div v-if="projectCategory === 'all' || projectCategory === 'events'" class="project-category-block">
             <h4 class="category-block-title">
-              <span>📅 校园活动分类 ({{ filteredEvents.length }} 项)</span>
+              <span><Calendar :size="18" :stroke-width="2.4" class="icon-inline" /> 校园活动分类 ({{ filteredEvents.length }} 项)</span>
             </h4>
 
             <div v-if="filteredEvents.length === 0" class="empty-block">
@@ -281,15 +285,15 @@
                     :disabled="ev.pendingCount === 0"
                     title="将本活动所有待审核学生一键确认为已完成"
                   >
-                    ✓ 一键全员完成
+                    <Check :size="15" :stroke-width="2.6" class="icon-inline" /> 一键全员完成
                   </button>
                 </div>
               </div>
 
               <div class="project-meta-info">
-                <span>📍 地点: {{ ev.location || '未设定' }}</span>
-                <span>🕒 时间: {{ formatDateTime(ev.startTime) }} - {{ formatDateTime(ev.endTime) }}</span>
-                <span>👥 报名人数: {{ ev.totalParticipants }} / {{ ev.requiredVolunteers }} 人</span>
+                <span><MapPin :size="14" :stroke-width="2.3" class="icon-inline" /> 地点: {{ ev.location || '未设定' }}</span>
+                <span><Clock :size="14" :stroke-width="2.3" class="icon-inline" /> 时间: {{ formatDateTime(ev.startTime) }} - {{ formatDateTime(ev.endTime) }}</span>
+                <span><Users :size="14" :stroke-width="2.3" class="icon-inline" /> 报名人数: {{ ev.totalParticipants }} / {{ ev.requiredVolunteers }} 人</span>
               </div>
 
               <div class="attendance-table-wrapper">
@@ -356,7 +360,7 @@
           <!-- 2. 周常岗位分类展示 -->
           <div v-if="projectCategory === 'all' || projectCategory === 'shifts'" class="project-category-block">
             <h4 class="category-block-title">
-              <span>🗓️ 周常岗位值日分类 ({{ filteredShifts.length }} 组)</span>
+              <span><CalendarClock :size="18" :stroke-width="2.4" class="icon-inline" /> 周常岗位值日分类 ({{ filteredShifts.length }} 组)</span>
             </h4>
 
             <div v-if="filteredShifts.length === 0" class="empty-block">
@@ -384,15 +388,15 @@
                     :disabled="sh.pendingCount === 0"
                     title="将本日该岗位所有待审核学生一键确认为已完成"
                   >
-                    ✓ 一键全员完成
+                    <Check :size="15" :stroke-width="2.6" class="icon-inline" /> 一键全员完成
                   </button>
                 </div>
               </div>
 
               <div class="project-meta-info">
-                <span>🕒 时段: {{ sh.timeRange }}</span>
-                <span>📅 日期: {{ sh.date }} ({{ sh.dayName }})</span>
-                <span>👥 参与学生: {{ sh.participants.length }} 人</span>
+                <span><Clock :size="14" :stroke-width="2.3" class="icon-inline" /> 时段: {{ sh.timeRange }}</span>
+                <span><Calendar :size="14" :stroke-width="2.3" class="icon-inline" /> 日期: {{ sh.date }} ({{ sh.dayName }})</span>
+                <span><Users :size="14" :stroke-width="2.3" class="icon-inline" /> 参与学生: {{ sh.participants.length }} 人</span>
               </div>
 
               <div class="attendance-table-wrapper">
@@ -473,14 +477,14 @@
               :class="{ active: makeupMode === 'event' }"
               @click="makeupMode = 'event'"
             >
-              📋 1. 按活动批量补录
+              <ClipboardList :size="16" :stroke-width="2.4" class="icon-inline" /> 1. 按活动批量补录
             </button>
             <button
               class="cat-tab-btn"
               :class="{ active: makeupMode === 'student' }"
               @click="makeupMode = 'student'"
             >
-              👤 2. 按单个学生补录
+              <UserPlus :size="16" :stroke-width="2.4" class="icon-inline" /> 2. 按单个学生补录
             </button>
           </div>
         </div>
@@ -596,7 +600,8 @@
                 class="btn-primary"
                 :disabled="makeupSubmitting"
               >
-                {{ makeupSubmitting ? '正在提交补录...' : '✓ 确认批量补录工时' }}
+                <Check v-if="!makeupSubmitting" :size="16" :stroke-width="2.6" class="icon-inline" />
+                {{ makeupSubmitting ? '正在提交补录...' : '确认批量补录工时' }}
               </button>
             </div>
           </div>
@@ -664,7 +669,7 @@
                 <span class="hours-chip">当前累计：{{ selectedSingleStudentObj.totalHours }} 小时</span>
               </div>
               <div v-else class="unselected-target-banner">
-                👈 请先在左侧列表中点击选择一名要补录的学生
+                <ArrowLeft :size="16" :stroke-width="2.5" class="icon-inline" /> 请先在左侧列表中点击选择一名要补录的学生
               </div>
 
               <div class="form-group">
@@ -695,7 +700,8 @@
                 style="width: 100%; margin-top: 8px;"
                 :disabled="makeupSubmitting || !singleMakeupForm.studentId"
               >
-                {{ makeupSubmitting ? '提交中...' : '✓ 确认给该学生补录工时' }}
+                <Check v-if="!makeupSubmitting" :size="16" :stroke-width="2.6" class="icon-inline" />
+                {{ makeupSubmitting ? '提交中...' : '确认给该学生补录工时' }}
               </button>
             </div>
           </div>
@@ -705,9 +711,11 @@
         <div class="makeup-history-section">
           <div class="flex-between" style="margin-bottom: 12px;">
             <h4 class="category-block-title" style="margin-bottom: 0;">
-              <span>📜 近期工时补录记录台账 ({{ makeupRecords.length }} 条)</span>
+              <span><History :size="18" :stroke-width="2.4" class="icon-inline" /> 近期工时补录记录台账 ({{ makeupRecords.length }} 条)</span>
             </h4>
-            <button @click="loadMakeupRecords" class="btn-sm btn-secondary">🔄 刷新记录</button>
+            <button @click="loadMakeupRecords" class="btn-sm btn-secondary">
+              <RefreshCw :size="14" :stroke-width="2.4" class="icon-inline" /> 刷新记录
+            </button>
           </div>
 
           <div class="table-container" v-if="makeupRecords.length > 0">
@@ -821,7 +829,7 @@
           <div v-if="rotations.length > 0" class="rotation-list">
             <div v-for="rot in rotations" :key="rot.id" class="rotation-item">
               <span class="rot-date">{{ rot.weekStartDate }}</span>
-              <span class="arrow">➡️</span>
+              <span class="arrow"><ArrowRight :size="16" :stroke-width="2.5" class="icon-inline" /></span>
               <span class="rot-class">{{ rot.assignedClass }}</span>
             </div>
           </div>
@@ -868,7 +876,7 @@
                   <tr v-for="row in matrixRows" :key="row.studentId">
                     <td class="sticky-col student-name">{{ row.name }}</td>
                     <td v-for="col in matrixColumns" :key="col.id" class="matrix-cell">
-                      <span v-if="row.signups[String(col.id)]" class="check-mark">✅</span>
+                      <span v-if="row.signups[String(col.id)]" class="check-mark"><CheckCircle2 :size="17" :stroke-width="2.5" class="icon-inline" /></span>
                       <span v-else class="empty-cell">—</span>
                     </td>
                   </tr>
@@ -898,6 +906,27 @@ import { reactive, ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { store } from '../store';
 import apiClient from '../services/api';
+import {
+  Plus,
+  RefreshCw,
+  MapPin,
+  Clock,
+  User,
+  Users,
+  Pencil,
+  Trash2,
+  Calendar,
+  CalendarClock,
+  Check,
+  CheckCircle2,
+  Hourglass,
+  ClipboardList,
+  UserPlus,
+  History,
+  ArrowRight,
+  ArrowLeft,
+  Eye,
+} from '../components/icons';
 
 const router = useRouter();
 const route = useRoute();
@@ -1349,10 +1378,10 @@ const getDisplayParticipants = (list) => {
 
 const getAttendanceStatusText = (status) => {
   const map = {
-    pending: '⏳ 待审核确认',
-    completed: '✅ 已完成 (工时已发)',
-    uncompleted: '❌ 未完成 (0工时)',
-    signed_up: '📝 已报名 (未结束)',
+    pending: '待审核确认',
+    completed: '已完成 (工时已发)',
+    uncompleted: '未完成 (0工时)',
+    signed_up: '已报名 (未结束)',
   };
   return map[status] || status;
 };

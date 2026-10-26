@@ -13,15 +13,13 @@
         </div>
 
         <div class="contact-info">
-          <div class="info-row">📱 {{ profile.phone }}</div>
-          <div v-if="profile.qq" class="info-row">🐧 {{ profile.qq }}</div>
-          <div v-if="profile.wechat" class="info-row">💬 {{ profile.wechat }}</div>
+          <div class="info-row"><Smartphone :size="16" :stroke-width="2.3" class="icon-inline" /> {{ profile.phone }}</div>
+          <div v-if="profile.qq" class="info-row"><MessageSquare :size="16" :stroke-width="2.3" class="icon-inline" /> QQ: {{ profile.qq }}</div>
+          <div v-if="profile.wechat" class="info-row"><MessageCircle :size="16" :stroke-width="2.3" class="icon-inline" /> 微信: {{ profile.wechat }}</div>
         </div>
 
         <button @click="handleLogout" class="btn-logout-profile" title="退出当前登录账号">
-          <svg class="logout-icon" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
-          </svg>
+          <LogOut :size="17" :stroke-width="2.4" class="logout-icon" />
           退出登录
         </button>
       </div>
@@ -97,6 +95,7 @@ import { ref, onMounted } from 'vue';
 import apiClient from '../services/api';
 import { store } from '../store';
 import { useRouter } from 'vue-router';
+import { Smartphone, MessageSquare, MessageCircle, LogOut } from '../components/icons';
 
 const router = useRouter();
 const profile = ref(null);

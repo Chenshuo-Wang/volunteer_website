@@ -24,9 +24,7 @@
           to="/admin" 
           class="nav-link admin-nav-link"
         >
-          <svg class="admin-icon" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd" />
-          </svg>
+          <ShieldCheck :size="15" :stroke-width="2.3" class="admin-icon" />
           <span>管理</span>
         </router-link>
       </nav>
@@ -64,22 +62,18 @@
         <div class="mobile-nav-section">
           <router-link to="/events" class="mobile-nav-item" @click="closeMobileMenu">
             <div class="mobile-item-left">
-              <span class="mobile-icon">📅</span>
+              <Calendar :size="18" :stroke-width="2.2" class="mobile-icon" />
               <span class="mobile-title">校园活动</span>
             </div>
-            <svg class="chevron-svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-            </svg>
+            <ChevronRight :size="16" :stroke-width="2.2" class="chevron-svg" />
           </router-link>
 
           <router-link to="/shifts" class="mobile-nav-item" @click="closeMobileMenu">
             <div class="mobile-item-left">
-              <span class="mobile-icon">🗓️</span>
+              <CalendarClock :size="18" :stroke-width="2.2" class="mobile-icon" />
               <span class="mobile-title">周常岗位值日</span>
             </div>
-            <svg class="chevron-svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-            </svg>
+            <ChevronRight :size="16" :stroke-width="2.2" class="chevron-svg" />
           </router-link>
 
           <router-link 
@@ -89,12 +83,10 @@
             @click="closeMobileMenu"
           >
             <div class="mobile-item-left">
-              <span class="mobile-icon">🛡️</span>
+              <ShieldCheck :size="18" :stroke-width="2.2" class="mobile-icon" />
               <span class="mobile-title">管理员后台</span>
             </div>
-            <svg class="chevron-svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-            </svg>
+            <ChevronRight :size="16" :stroke-width="2.2" class="chevron-svg" />
           </router-link>
         </div>
 
@@ -107,9 +99,7 @@
                 <div class="mobile-user-name">{{ store.user.name }}</div>
                 <div class="mobile-user-role">{{ store.user.isAdmin ? '系统管理员' : '志愿者学生' }} · 点击进入个人中心</div>
               </div>
-              <svg class="chevron-svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>
+              <ChevronRight :size="16" :stroke-width="2.2" class="chevron-svg" />
             </router-link>
           </template>
           <template v-else>
@@ -130,6 +120,7 @@
 import { ref, watch } from 'vue';
 import { store } from '../store';
 import { useRouter, useRoute } from 'vue-router';
+import { ShieldCheck, Calendar, CalendarClock, ChevronRight } from './icons';
 
 const router = useRouter();
 const route = useRoute();

@@ -5,9 +5,9 @@
         <StatusBadge :status="event.status" />
         <h1 class="title">{{ event.title }}</h1>
         <div class="meta-row">
-          <span>📍 {{ event.location }}</span>
-          <span>⏱️ {{ event.hoursValue }} 志愿工时</span>
-          <span>👥 {{ event.currentVolunteers }} / {{ event.requiredVolunteers }} 已报名</span>
+          <span><MapPin :size="16" :stroke-width="2.3" class="icon-inline" /> {{ event.location }}</span>
+          <span><Clock :size="16" :stroke-width="2.3" class="icon-inline" /> {{ event.hoursValue }} 志愿工时</span>
+          <span><Users :size="16" :stroke-width="2.3" class="icon-inline" /> {{ event.currentVolunteers }} / {{ event.requiredVolunteers }} 已报名</span>
         </div>
       </div>
 
@@ -41,12 +41,12 @@
 
       <!-- 管理员专属快捷操作 -->
       <div v-if="store.user?.isAdmin" class="admin-quick-actions">
-        <span class="admin-tip">🛡️ 管理员快捷权限：</span>
+        <span class="admin-tip"><ShieldCheck :size="17" :stroke-width="2.3" class="icon-inline" /> 管理员快捷权限：</span>
         <router-link 
           :to="{ path: '/admin', query: { tab: '活动管理', editId: event.id } }" 
           class="btn-admin-edit"
         >
-          ✏️ 编辑修改此活动
+          <Pencil :size="15" :stroke-width="2.3" class="icon-inline" /> 编辑修改此活动
         </router-link>
       </div>
 
@@ -78,6 +78,7 @@ import { useRoute, useRouter } from 'vue-router';
 import apiClient from '../services/api';
 import { store } from '../store';
 import StatusBadge from '../components/StatusBadge.vue';
+import { MapPin, Clock, Users, ShieldCheck, Pencil } from '../components/icons';
 
 const route = useRoute();
 const router = useRouter();

@@ -6,7 +6,7 @@
     </header>
 
     <div v-if="currentRotation" class="rotation-banner">
-      🔔 本周 ({{ currentRotationWeek }}) 轮值班级：
+      <Bell :size="18" :stroke-width="2.4" class="icon-inline" /> 本周 ({{ currentRotationWeek }}) 轮值班级：
       <span class="highlight-class">{{ currentRotation }}</span>
     </div>
 
@@ -24,7 +24,7 @@
     </div>
 
     <div v-else-if="!isWeekday" class="notice-box">
-      <p>⚠️ 周常任务仅限工作日（周一到周五）</p>
+      <p><AlertTriangle :size="18" :stroke-width="2.4" class="icon-inline" /> 周常任务仅限工作日（周一到周五）</p>
       <p>请选择工作日的日期</p>
     </div>
 
@@ -39,15 +39,15 @@
         
         <div class="shift-info">
           <div class="info-row">
-            <span class="icon">🕒</span>
+            <Clock :size="15" :stroke-width="2.3" class="icon-inline" />
             <span>{{ shift.timeRange }}</span>
           </div>
           <div class="info-row">
-            <span class="icon">👥</span>
+            <Users :size="15" :stroke-width="2.3" class="icon-inline" />
             <span>容量: {{ currentSignupCount(shift.id) }} / {{ shift.capacity }} 人</span>
           </div>
           <div v-if="shift.description" class="info-row">
-            <span class="icon">💡</span>
+            <Lightbulb :size="15" :stroke-width="2.3" class="icon-inline" />
             <span class="description">{{ shift.description }}</span>
           </div>
         </div>
@@ -64,7 +64,7 @@
           :disabled="signingUp === shift.id || isShiftFull(shift) || hasSignedUp(shift.id)"
         >
           <span v-if="signingUp === shift.id">提交中...</span>
-          <span v-else-if="hasSignedUp(shift.id)">✓ 已报名</span>
+          <span v-else-if="hasSignedUp(shift.id)"><Check :size="15" :stroke-width="2.6" class="icon-inline" /> 已报名</span>
           <span v-else-if="isShiftFull(shift)">已满员</span>
           <span v-else>立即报名</span>
         </button>
@@ -99,6 +99,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import apiClient from '../services/api';
 import { store } from '../store';
 import { useRouter } from 'vue-router';
+import { Bell, AlertTriangle, Clock, Users, Lightbulb, Check } from '../components/icons';
 
 const router = useRouter();
 const shifts = ref([]);
