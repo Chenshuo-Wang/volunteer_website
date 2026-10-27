@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { onRequestStart, onRequestEnd } from './pageTransition';
 
 const apiClient = axios.create({
   // 支持通过环境变量 VITE_API_BASE_URL 指定外部后端（例如 Render / Railway 独立服务），
@@ -9,16 +10,33 @@ const apiClient = axios.create({
   },
 });
 
-// Add a request interceptor
-apiClient.interceptors.request.use(config => {
-  const user = JSON.parse(localStorage.getItem('user'));
-  if (user && user.isAdmin) {
-    // 使用管理员的手机号作为 Token
-    config.headers['X-Admin-Token'] = user.phone;
+// 请求拦截器：附加管理员凭证并通知页面过渡管理器请求开始
+apiClient.interceptors.request.use(
+  (config) => {
+    onRequestStart();
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.isAdmin) {
+      // 使用管理员的手机号作为 Token
+      config.headers['X-Admin-Token'] = user.phone;
+    }
+    return config;
+  },
+  (error) => {
+    onRequestEnd();
+    return Promise.reject(error);
   }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+);
+
+// 响应拦截器：通知页面过渡管理器请求结束
+apiClient.interceptors.response.use(
+  (response) => {
+    onRequestEnd();
+    return response;
+  },
+  (error) => {
+    onRequestEnd();
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;
