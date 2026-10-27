@@ -2,7 +2,7 @@
   <div class="container login-container">
     <div class="glass-panel login-card">
       <div class="login-header">
-        <h2>登录志愿星火</h2>
+        <h2>登录 VOLUNTEER</h2>
         <p>使用手机号和密码登录</p>
       </div>
 

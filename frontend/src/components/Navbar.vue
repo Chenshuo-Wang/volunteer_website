@@ -4,7 +4,7 @@
       <!-- 品牌标题（已移除所有Logo） -->
       <div class="brand-container">
         <router-link to="/" class="brand-link" @click="closeMobileMenu">
-          <span class="brand-title">志愿星火</span>
+          <span class="brand-title">VOLUNTEER</span>
           <span class="brand-badge">Campus</span>
         </router-link>
       </div>
@@ -208,8 +208,8 @@ watch(() => route.fullPath, () => {
 
 .brand-title {
   font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   color: #012030;
 }
 

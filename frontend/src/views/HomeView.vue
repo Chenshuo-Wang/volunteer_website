@@ -1,7 +1,7 @@
 <template>
   <div class="home-container">
     <div class="hero-section glass-panel">
-      <h1>欢迎来到校园志愿星火</h1>
+      <h1>欢迎来到 VOLUNTEER</h1>
       <p class="subtitle">连接爱心，服务校园，记录你的每一份贡献</p>
       
       <div class="action-buttons">
