@@ -1,15 +1,18 @@
 <template>
   <Navbar />
   <div class="main-content" :class="{ 'is-navigating': isTransitioning }">
-    <!-- 页面切换滑动视口 -->
+    <!-- 页面切换视口 -->
     <div class="route-slider-viewport">
       <!-- 页面视图主体内容 -->
       <div 
         class="stage-content"
         :class="{
-          'slide-out-left': transitionState === 'to-blank',
-          'target-slide-in': transitionState === 'to-target',
-          'at-blank-hidden': transitionState === 'at-blank'
+          'content-blur-out': transitionState === 'to-blank',
+          'content-at-blank': transitionState === 'at-blank',
+          'content-reveal': transitionState === 'to-target',
+          'sub-page-fade-out': transitionState === 'sub-fade-out',
+          'sub-page-wait': transitionState === 'sub-wait',
+          'sub-page-fade-in': transitionState === 'sub-fade-in'
         }"
       >
         <router-view v-slot="{ Component }">
@@ -17,14 +20,14 @@
         </router-view>
       </div>
 
-      <!-- 极简机能过渡幕布层（固定视口定位，不受滚动条影响，保持视口上下绝对居中） -->
+      <!-- 一级页面专属：极简机能过渡幕布层（二级页面切换时不挂载） -->
       <div 
-        v-if="transitionState !== 'idle'" 
+        v-if="isCurtainVisible" 
         class="stage-blank"
         :class="{
-          'blank-slide-in': transitionState === 'to-blank',
-          'blank-centered': transitionState === 'at-blank',
-          'blank-slide-out': transitionState === 'to-target'
+          'curtain-enter': transitionState === 'to-blank',
+          'curtain-hold': transitionState === 'at-blank',
+          'curtain-fade-out': transitionState === 'to-target'
         }"
         aria-hidden="true"
       >
@@ -34,7 +37,7 @@
               <span class="type-line line-1">ANSHEN</span>
             </div>
             <div class="line-mask">
-              <span class="type-line line-2">VOLUNTEER</span>
+              <span class="type-line line-2">VOLUNTEER<span class="brand-dot">.</span></span>
             </div>
           </div>
         </div>
@@ -47,8 +50,13 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import Navbar from './components/Navbar.vue';
 import { transitionState, isTransitioning } from './services/pageTransition';
+
+const isCurtainVisible = computed(() =>
+  ['to-blank', 'at-blank', 'to-target'].includes(transitionState.value)
+);
 </script>
 
 <style scoped>
@@ -66,7 +74,7 @@ import { transitionState, isTransitioning } from './services/pageTransition';
   pointer-events: none;
 }
 
-/* 页面切换滑动视口 */
+/* 页面切换视口 */
 .route-slider-viewport {
   position: relative;
   width: 100%;
@@ -83,50 +91,79 @@ import { transitionState, isTransitioning } from './services/pageTransition';
   width: 100%;
   min-height: 100%;
   box-sizing: border-box;
-  will-change: transform;
+  will-change: filter, transform, opacity;
   backface-visibility: hidden;
   transform: translate3d(0, 0, 0);
 }
 
-/* 阶段一：原有页面向左划出到空白过渡页面 */
-.stage-content.slide-out-left {
-  animation: contentSlideOutLeft 300ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+/* ==================== 一级页面过渡：Blur 模糊 + 幕布切入 ==================== */
+.stage-content.content-blur-out {
+  animation: screenBlurOut 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   pointer-events: none;
 }
 
-/* 阶段二：过渡空白页面在中央停留时，隐藏并预备新页面 */
-.stage-content.at-blank-hidden {
+.stage-content.content-at-blank {
+  opacity: 0;
+  filter: none;
+  pointer-events: none;
+}
+
+.stage-content.content-reveal {
+  opacity: 1;
+  filter: none;
+  pointer-events: none;
+}
+
+@keyframes screenBlurOut {
+  0% {
+    filter: blur(0px);
+    transform: scale(1);
+  }
+  100% {
+    filter: blur(12px);
+    transform: scale(0.985);
+  }
+}
+
+/* ==================== 二级页面专属：轻量淡出与淡入动画 ==================== */
+.stage-content.sub-page-fade-out {
+  animation: subPageFadeOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.stage-content.sub-page-wait {
   opacity: 0;
   pointer-events: none;
 }
 
-/* 阶段三：加载完成后向左划出到目标页面 */
-.stage-content.target-slide-in {
-  animation: targetSlideInLeft 300ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+.stage-content.sub-page-fade-in {
+  animation: subPageFadeIn 260ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   pointer-events: none;
 }
 
-@keyframes contentSlideOutLeft {
-  from {
+@keyframes subPageFadeOut {
+  0% {
+    opacity: 1;
     transform: translate3d(0, 0, 0);
   }
-  to {
-    transform: translate3d(-100%, 0, 0);
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
   }
 }
 
-@keyframes targetSlideInLeft {
-  from {
-    transform: translate3d(100%, 0, 0);
-    opacity: 1;
+@keyframes subPageFadeIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
   }
-  to {
-    transform: translate3d(0, 0, 0);
+  100% {
     opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 
-/* 过渡页面幕布层：固定于视口 (100vw × 100dvh)，不受页面滚动条影响 */
+/* 过渡页面幕布层：固定于视口 (100vw × 100dvh)，不受页面滚动条影响，整体上下与左右居中，全屏物理阻断点击 */
 .stage-blank {
   position: fixed;
   top: 0;
@@ -135,50 +172,53 @@ import { transitionState, isTransitioning } from './services/pageTransition';
   height: 100vh;
   height: 100dvh;
   box-sizing: border-box;
-  z-index: 90;
-  pointer-events: none;
+  z-index: 120;
+  pointer-events: auto;
+  cursor: default;
   background-color: var(--bg-color);
-  will-change: transform;
+  will-change: opacity;
   backface-visibility: hidden;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
-/* 阶段一：空白过渡页面从右侧向左划入 */
-.stage-blank.blank-slide-in {
-  animation: blankSlideInLeft 300ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+/* 阶段一（后半段 220~650ms）：待当前画面模糊铺垫后，平缓切入幕布 */
+.stage-blank.curtain-enter {
+  opacity: 0;
+  animation: curtainFadeIn 430ms cubic-bezier(0.22, 1, 0.36, 1) 220ms forwards;
 }
 
-/* 阶段二：空白过渡页面在中央停留 */
-.stage-blank.blank-centered {
-  transform: translate3d(0, 0, 0);
+/* 阶段二：幕布保持完全不透明，等待新页面加载就绪并优雅驻留 */
+.stage-blank.curtain-hold {
+  opacity: 1;
 }
 
-/* 阶段三：空白过渡页面向左划出，露出目标页面 */
-.stage-blank.blank-slide-out {
-  animation: blankSlideOutLeft 300ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+/* 阶段三：幕布平缓淡出，显露底层新画面 */
+.stage-blank.curtain-fade-out {
+  opacity: 1;
+  animation: curtainFadeOut 450ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes blankSlideInLeft {
+@keyframes curtainFadeIn {
   from {
-    transform: translate3d(100%, 0, 0);
+    opacity: 0;
   }
   to {
-    transform: translate3d(0, 0, 0);
+    opacity: 1;
   }
 }
 
-@keyframes blankSlideOutLeft {
+@keyframes curtainFadeOut {
   from {
-    transform: translate3d(0, 0, 0);
+    opacity: 1;
   }
   to {
-    transform: translate3d(-100%, 0, 0);
+    opacity: 0;
   }
 }
 
-/* 上下绝对居中、靠左对齐容器 */
+/* 视口整体居中容器 */
 .blank-inner {
   width: 100%;
   max-width: 1020px;
@@ -187,16 +227,22 @@ import { transitionState, isTransitioning } from './services/pageTransition';
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
-/* 极简机能排版：无冗余装饰，仅靠字重、紧凑字距与利落遮罩切入 */
+/* 文本块整体居中，内部字段保持严格靠左对齐 */
 .minimal-brand-type {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
   user-select: none;
+}
+
+.brand-dot {
+  color: #45C4B0;
+  display: inline-block;
+  margin-left: 2px;
 }
 
 .line-mask {
@@ -214,11 +260,11 @@ import { transitionState, isTransitioning } from './services/pageTransition';
   text-transform: uppercase;
   will-change: transform;
   transform: translate3d(0, 105%, 0);
-  animation: lineRise 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: lineRise 380ms cubic-bezier(0.16, 1, 0.3, 1) 260ms forwards;
 }
 
 .line-2 {
-  animation-delay: 55ms;
+  animation-delay: 340ms;
 }
 
 @keyframes lineRise {

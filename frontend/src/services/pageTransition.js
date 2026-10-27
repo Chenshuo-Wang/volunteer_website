@@ -1,15 +1,32 @@
 import { ref, nextTick } from 'vue';
 
 export const transitionState = ref('idle');
-// 'idle': 常规状态
-// 'to-blank': 阶段一：原有页面向左划出，空白过渡页面向左划入
-// 'at-blank': 阶段二：处于空白过渡页面，等待新页面组件挂载及初始数据请求全部完成
-// 'to-target': 阶段三：空白过渡页面向左划出，目标页面向左划入
+// 'idle': 常规静止状态
+// --- 一级页面（幕布过渡） ---
+// 'to-blank': 阶段一：当前画面先施加模糊 (blur)，随后过渡切入幕布
+// 'at-blank': 阶段二：幕布停留，等待新页面组件挂载及初始数据请求全部完成
+// 'to-target': 阶段三：幕布平滑淡出 (fade-out)，显露加载完成的新画面
+// --- 二级页面（轻量淡入淡出过渡） ---
+// 'sub-fade-out': 阶段一：当前页面平缓淡出并微幅上移
+// 'sub-wait': 阶段二：透明态下切换路由并等待二级页面数据就绪
+// 'sub-fade-in': 阶段三：二级目标页面平缓淡入并归位
 
 export const isTransitioning = ref(false);
+let currentTransitionType = 'none'; // 'curtain' | 'sub-fade' | 'none'
+let currentSessionId = 0;
+let safetyTimer = null;
 
-const SLIDE_DURATION = 300; // 划动过渡动画持续时间 (ms)
-const MAX_LOAD_WAIT = 8000; // 极端网络异常下的最大安全等待上限 (ms)
+// 一级页面幕布动画时长配置
+const ENTER_CURTAIN_DURATION = 650; // 阶段一总时长：当前画面先延时模糊 (0~380ms) + 幕布切入 (220~650ms)
+const FADE_OUT_DURATION = 450;      // 阶段三总时长：幕布平缓淡出到新画面 (ms)
+const MIN_CURTAIN_HOLD = 380;       // 幕布优雅驻留视觉确认时间 (ms)
+
+// 二级页面淡入淡出动画时长配置
+const SUB_FADE_OUT_DURATION = 200;  // 二级页面淡出时长 (ms)
+const SUB_FADE_IN_DURATION = 260;   // 二级页面淡入时长 (ms)
+
+const MAX_LOAD_WAIT = 8000;         // 极端网络异常下的最大安全等待上限 (ms)
+const SAFETY_AUTO_RESET = 4500;     // 极端路由异常下的自动重置保护 (ms)
 
 // 追踪当前正在进行中的 API 请求数量
 let activeRequests = 0;
@@ -65,7 +82,7 @@ function waitForRequestsIdle(timeoutMs) {
  * 2. 若页面发起了 API 数据请求（含串行 await 请求链），等待所有请求响应完毕
  * 3. 等待 Vue 将响应数据渲染到 DOM 并完成下一帧绘制
  */
-async function waitForPageReady() {
+async function waitForPageReady(minHoldMs = 0) {
   const startTime = Date.now();
 
   // 确保新路由组件已完成 setup 与 onMounted 同步阶段执行
@@ -87,24 +104,83 @@ async function waitForPageReady() {
   // 确保最终数据已挂载到 DOM 并准备就绪
   await nextTick();
   await nextFrame();
+
+  if (minHoldMs > 0) {
+    const totalElapsed = Date.now() - startTime;
+    if (totalElapsed < minHoldMs) {
+      await wait(minHoldMs - totalElapsed);
+    }
+  }
 }
 
+function armSafetyTimer() {
+  if (safetyTimer) clearTimeout(safetyTimer);
+  safetyTimer = setTimeout(() => {
+    if (isTransitioning.value) {
+      resetTransition();
+    }
+  }, SAFETY_AUTO_RESET);
+}
+
+// 一级页面：启动模糊 + 幕布切入（带防重入锁）
 export async function startSlideToBlank() {
+  if (isTransitioning.value) return;
+  const sessionId = ++currentSessionId;
   isTransitioning.value = true;
+  currentTransitionType = 'curtain';
   transitionState.value = 'to-blank';
-  await wait(SLIDE_DURATION);
+  armSafetyTimer();
+
+  await wait(ENTER_CURTAIN_DURATION);
+  if (sessionId !== currentSessionId) return;
   transitionState.value = 'at-blank';
 }
 
+// 二级页面：启动轻量淡出（带防重入锁）
+export async function startSubPageFadeOut() {
+  if (isTransitioning.value) return;
+  const sessionId = ++currentSessionId;
+  isTransitioning.value = true;
+  currentTransitionType = 'sub-fade';
+  transitionState.value = 'sub-fade-out';
+  armSafetyTimer();
+
+  await wait(SUB_FADE_OUT_DURATION);
+  if (sessionId !== currentSessionId) return;
+  transitionState.value = 'sub-wait';
+}
+
+// 统一收尾：根据当前过渡类型执行幕布淡出或二级页面淡入
 export async function finishSlideToTarget() {
-  // 阶段二仅在新页面（DOM 挂载 + 初始异步数据加载与渲染）完成后结束
-  await waitForPageReady();
+  if (!isTransitioning.value) return;
+  const sessionId = currentSessionId;
+
+  if (currentTransitionType === 'sub-fade') {
+    await waitForPageReady(0);
+    if (sessionId !== currentSessionId) return;
+    transitionState.value = 'sub-fade-in';
+    await wait(SUB_FADE_IN_DURATION);
+    if (sessionId !== currentSessionId) return;
+    resetTransition();
+    return;
+  }
+
+  // 一级页面幕布模式
+  await waitForPageReady(MIN_CURTAIN_HOLD);
+  if (sessionId !== currentSessionId) return;
   transitionState.value = 'to-target';
-  await wait(SLIDE_DURATION);
+  await wait(FADE_OUT_DURATION);
+  if (sessionId !== currentSessionId) return;
   resetTransition();
 }
 
 export function resetTransition() {
+  if (safetyTimer) {
+    clearTimeout(safetyTimer);
+    safetyTimer = null;
+  }
+  currentSessionId++;
   transitionState.value = 'idle';
+  currentTransitionType = 'none';
   isTransitioning.value = false;
 }

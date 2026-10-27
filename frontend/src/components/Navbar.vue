@@ -1,6 +1,6 @@
 <template>
-  <header class="floating-nav-wrapper">
-    <div class="nav-squircle" :class="{ 'menu-open': isMobileMenuOpen }">
+  <header class="floating-nav-wrapper" :class="{ 'is-navigating': isTransitioning }">
+    <div class="nav-squircle" :class="{ 'menu-open': isMobileMenuOpen, 'is-navigating': isTransitioning }">
       <!-- 品牌标题（已移除所有Logo） -->
       <div class="brand-container">
         <router-link to="/" class="brand-link" @click="closeMobileMenu">
@@ -58,7 +58,7 @@
 
     <!-- 手机端悬浮毛玻璃折叠面板 -->
     <transition name="mobile-card-slide">
-      <div v-if="isMobileMenuOpen" class="mobile-dropdown-card">
+      <div v-if="isMobileMenuOpen" class="mobile-dropdown-card" :class="{ 'is-navigating': isTransitioning }">
         <div class="mobile-nav-section">
           <router-link to="/events" class="mobile-nav-item" @click="closeMobileMenu">
             <div class="mobile-item-left">
@@ -121,6 +121,7 @@ import { ref, watch } from 'vue';
 import { store } from '../store';
 import { useRouter, useRoute } from 'vue-router';
 import { ShieldCheck, Calendar, CalendarClock, ChevronRight } from './icons';
+import { isTransitioning } from '../services/pageTransition';
 
 const router = useRouter();
 const route = useRoute();
@@ -185,6 +186,15 @@ watch(() => route.fullPath, () => {
     0 2px 8px -2px rgba(1, 32, 48, 0.03);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
+}
+
+/* 过渡动画期间彻底禁用导航栏交互，物理拦截连击 */
+.floating-nav-wrapper.is-navigating,
+.nav-squircle.is-navigating,
+.mobile-dropdown-card.is-navigating {
+  pointer-events: none !important;
+  cursor: default !important;
+  user-select: none !important;
 }
 
 /* 品牌纯文本标题区（无 Logo） */
