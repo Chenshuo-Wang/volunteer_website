@@ -38,7 +38,72 @@ let currentTransitionType = initialTransitionState === 'curtain-initial' ? 'curt
 let currentSessionId = 0;
 let safetyTimer = null;
 
+// ==================== 全局物理与事件交互彻底阻断机制 ====================
+const SCROLL_KEYS = new Set([
+  'Space', 'PageUp', 'PageDown', 'End', 'Home',
+  'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Tab'
+]);
+
+function preventDefaultEvent(e) {
+  if (e.cancelable) {
+    e.preventDefault();
+  }
+  e.stopPropagation();
+  return false;
+}
+
+function handleKeyDown(e) {
+  if (SCROLL_KEYS.has(e.code) || SCROLL_KEYS.has(e.key)) {
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    e.stopPropagation();
+    return false;
+  }
+}
+
+let isInteractionsLocked = false;
+let savedScrollY = 0;
+
+export function updateLockedScrollPosition(newY = 0) {
+  savedScrollY = newY;
+}
+
+function lockScrollPosition() {
+  if (isInteractionsLocked && typeof window !== 'undefined') {
+    window.scrollTo(0, savedScrollY);
+  }
+}
+
+function lockAllInteractions() {
+  if (typeof window === 'undefined' || isInteractionsLocked) return;
+  isInteractionsLocked = true;
+  savedScrollY = window.scrollY || window.pageYOffset || 0;
+
+  document.documentElement.classList.add('is-navigating');
+  document.body.classList.add('is-navigating');
+
+  window.addEventListener('wheel', preventDefaultEvent, { passive: false, capture: true });
+  window.addEventListener('touchmove', preventDefaultEvent, { passive: false, capture: true });
+  window.addEventListener('keydown', handleKeyDown, { capture: true });
+  window.addEventListener('scroll', lockScrollPosition, { passive: false, capture: true });
+}
+
+function unlockAllInteractions() {
+  if (typeof window === 'undefined' || !isInteractionsLocked) return;
+  isInteractionsLocked = false;
+
+  document.documentElement.classList.remove('is-navigating');
+  document.body.classList.remove('is-navigating');
+
+  window.removeEventListener('wheel', preventDefaultEvent, { capture: true });
+  window.removeEventListener('touchmove', preventDefaultEvent, { capture: true });
+  window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  window.removeEventListener('scroll', lockScrollPosition, { capture: true });
+}
+
 if (initialTransitionState === 'curtain-initial') {
+  lockAllInteractions();
   armSafetyTimer();
 }
 
@@ -141,6 +206,7 @@ export async function startSlideToBlank() {
   if (isTransitioning.value) return;
   const sessionId = ++currentSessionId;
   isTransitioning.value = true;
+  lockAllInteractions();
   currentTransitionType = 'curtain';
   transitionState.value = 'to-blank';
   armSafetyTimer();
@@ -154,6 +220,7 @@ export async function startSlideToBlank() {
 export function startInitialCurtain() {
   const sessionId = ++currentSessionId;
   isTransitioning.value = true;
+  lockAllInteractions();
   currentTransitionType = 'curtain';
   transitionState.value = 'curtain-initial';
   armSafetyTimer();
@@ -164,6 +231,7 @@ export async function startSubPageFadeOut() {
   if (isTransitioning.value) return;
   const sessionId = ++currentSessionId;
   isTransitioning.value = true;
+  lockAllInteractions();
   currentTransitionType = 'sub-fade';
   transitionState.value = 'sub-fade-out';
   armSafetyTimer();
@@ -207,4 +275,5 @@ export function resetTransition() {
   transitionState.value = 'idle';
   currentTransitionType = 'none';
   isTransitioning.value = false;
+  unlockAllInteractions();
 }

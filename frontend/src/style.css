@@ -53,6 +53,22 @@ body {
   line-height: 1.6;
 }
 
+/* 过渡动画期间彻底锁定全局交互、页面滚动与触摸手势 */
+html.is-navigating,
+body.is-navigating {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  pointer-events: none !important;
+}
+
+html.is-navigating #app,
+body.is-navigating #app {
+  pointer-events: none !important;
+}
+
 #app {
   display: flex;
   flex-direction: column;

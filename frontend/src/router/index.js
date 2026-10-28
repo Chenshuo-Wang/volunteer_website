@@ -42,6 +42,7 @@ import {
   startSubPageFadeOut,
   finishSlideToTarget,
   resetTransition,
+  updateLockedScrollPosition,
 } from '../services/pageTransition';
 
 router.beforeEach(async (to, from, next) => {
@@ -103,8 +104,9 @@ router.afterEach(async (to, from) => {
     return;
   }
 
-  // 切换后视口滚动置顶
+  // 切换后视口滚动置顶并重置锁定锚点
   window.scrollTo({ top: 0, behavior: 'instant' });
+  updateLockedScrollPosition(0);
 
   if (!isTransitioning.value) {
     return;

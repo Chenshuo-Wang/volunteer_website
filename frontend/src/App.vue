@@ -1,4 +1,18 @@
 <template>
+  <!-- 全局绝对物理阻断护盾：在一切动画过渡期间全屏覆盖，彻底拦截任何点击、滑动、拖拽与手势 -->
+  <div 
+    v-if="isTransitioning" 
+    class="global-interaction-shield" 
+    aria-hidden="true"
+    @wheel.prevent.stop
+    @touchmove.prevent.stop
+    @touchstart.prevent.stop
+    @mousedown.prevent.stop
+    @click.prevent.stop
+    @dblclick.prevent.stop
+    @contextmenu.prevent.stop
+  ></div>
+
   <Navbar />
   <div class="main-content" :class="{ 'is-navigating': isTransitioning }">
     <!-- 页面切换视口 -->
@@ -71,6 +85,25 @@ const isCurtainVisible = computed(() =>
 </script>
 
 <style scoped>
+/* 全局绝对物理阻断护盾：最高层级阻断一切点击、悬停、右键与手势穿透 */
+.global-interaction-shield {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 999999;
+  background: transparent;
+  pointer-events: auto !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  cursor: default !important;
+}
+
 .main-content {
   flex: 1;
   padding: 0;
