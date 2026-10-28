@@ -10,7 +10,7 @@ import { store } from '../store'
 
 const routes = [
   // 访问根路径直接跳转到活动列表
-  { path: '/', redirect: '/events' },
+  { path: '/', redirect: '/events', meta: { isFirstLevel: true } },
   { path: '/login', name: 'Login', component: LoginView, meta: { isFirstLevel: true } },
   { path: '/register', name: 'Register', component: RegisterView, meta: { isFirstLevel: false } },
   { path: '/events', name: 'EventList', component: EventList, meta: { isFirstLevel: true } },
@@ -37,6 +37,7 @@ const router = createRouter({
 
 import {
   isTransitioning,
+  startInitialCurtain,
   startSlideToBlank,
   startSubPageFadeOut,
   finishSlideToTarget,
@@ -56,26 +57,37 @@ router.beforeEach(async (to, from, next) => {
     return next({ name: 'Login' });
   }
 
-  // 3. 正在过渡中则拦截所有连击请求，防止重复触发与中断动画
-  if (isTransitioning.value) {
+  // 3. 判断是否为初次加载（进入网站/刷新）及是否为同路径
+  const isInitial = !from.name || from.matched.length === 0;
+  const isSamePath = to.fullPath === from.fullPath || to.path === from.path;
+
+  // 4. 非初次加载且处于过渡中时拦截连击，防止重复触发与中断动画
+  if (!isInitial && isTransitioning.value) {
     return next(false);
   }
 
-  // 4. 首次进入页面或同页面/同路径则直接进入，不执行过渡动画
-  const isInitial = !from.name || from.matched.length === 0;
-  const isSamePath = to.fullPath === from.fullPath || to.path === from.path;
-  if (isInitial || isSamePath) {
+  // 5. 非初次加载且点击相同路径则直接放行，不重复施加动画
+  if (!isInitial && isSamePath) {
     return next();
   }
 
-  // 5. 区分一级页面切换（机能幕布动画）与二级页面切换（轻量淡入淡出动画）
-  const isFirstLevelTransition = Boolean(from.meta?.isFirstLevel && to.meta?.isFirstLevel);
+  // 6. 只要目标是一级页面（无论是首次进入、刷新、二级切一级、还是一级互切），均施加机能幕布动画
+  const isTargetFirstLevel = Boolean(to.meta?.isFirstLevel || to.path === '/' || to.path === '/events');
 
   try {
-    if (isFirstLevelTransition) {
-      await startSlideToBlank();
+    if (isTargetFirstLevel) {
+      if (isInitial) {
+        // 初次进入网站或刷新一级页面：以全屏幕布起手，无旧画面模糊等待，避免白屏或无序闪烁
+        startInitialCurtain();
+      } else {
+        // 常规切换进入一级页面（含二级返回一级、一级互切）：旧画面先延时模糊，再平滑切入幕布
+        await startSlideToBlank();
+      }
     } else {
-      await startSubPageFadeOut();
+      // 目标为二级页面（如活动详情/注册）：执行轻量级淡入淡出动画
+      if (!isInitial) {
+        await startSubPageFadeOut();
+      }
     }
     next();
   } catch (err) {
@@ -87,7 +99,7 @@ router.beforeEach(async (to, from, next) => {
 router.afterEach(async (to, from) => {
   const isInitial = !from.name || from.matched.length === 0;
   const isSamePath = to.fullPath === from.fullPath || to.path === from.path;
-  if (isInitial || isSamePath) {
+  if (!isInitial && isSamePath) {
     return;
   }
 

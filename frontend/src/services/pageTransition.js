@@ -1,9 +1,18 @@
 import { ref, nextTick } from 'vue';
 
-export const transitionState = ref('idle');
+function getInitialState() {
+  if (typeof window === 'undefined') return 'idle';
+  const path = window.location.pathname.split('?')[0].split('#')[0];
+  const firstLevelPaths = ['/', '/events', '/shifts', '/profile', '/admin', '/login'];
+  return firstLevelPaths.includes(path) ? 'curtain-initial' : 'idle';
+}
+
+const initialTransitionState = getInitialState();
+export const transitionState = ref(initialTransitionState);
 // 'idle': 常规静止状态
 // --- 一级页面（幕布过渡） ---
-// 'to-blank': 阶段一：当前画面先施加模糊 (blur)，随后过渡切入幕布
+// 'curtain-initial': 阶段一（初次进入/刷新专属）：幕布开屏全透起手，字迹迅速浮现，无旧画面模糊等待
+// 'to-blank': 阶段一（常规切换）：当前画面先施加模糊 (blur)，随后过渡切入幕布
 // 'at-blank': 阶段二：幕布停留，等待新页面组件挂载及初始数据请求全部完成
 // 'to-target': 阶段三：幕布平滑淡出 (fade-out)，显露加载完成的新画面
 // --- 二级页面（轻量淡入淡出过渡） ---
@@ -11,10 +20,14 @@ export const transitionState = ref('idle');
 // 'sub-wait': 阶段二：透明态下切换路由并等待二级页面数据就绪
 // 'sub-fade-in': 阶段三：二级目标页面平缓淡入并归位
 
-export const isTransitioning = ref(false);
-let currentTransitionType = 'none'; // 'curtain' | 'sub-fade' | 'none'
+export const isTransitioning = ref(initialTransitionState === 'curtain-initial');
+let currentTransitionType = initialTransitionState === 'curtain-initial' ? 'curtain' : 'none';
 let currentSessionId = 0;
 let safetyTimer = null;
+
+if (initialTransitionState === 'curtain-initial') {
+  armSafetyTimer();
+}
 
 // 一级页面幕布动画时长配置
 const ENTER_CURTAIN_DURATION = 650; // 阶段一总时长：当前画面先延时模糊 (0~380ms) + 幕布切入 (220~650ms)
@@ -134,6 +147,15 @@ export async function startSlideToBlank() {
   await wait(ENTER_CURTAIN_DURATION);
   if (sessionId !== currentSessionId) return;
   transitionState.value = 'at-blank';
+}
+
+// 首次进入/刷新一级页面：直接以初始幕布起手，无需等待旧画面模糊
+export function startInitialCurtain() {
+  const sessionId = ++currentSessionId;
+  isTransitioning.value = true;
+  currentTransitionType = 'curtain';
+  transitionState.value = 'curtain-initial';
+  armSafetyTimer();
 }
 
 // 二级页面：启动轻量淡出（带防重入锁）

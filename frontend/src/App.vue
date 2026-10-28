@@ -8,7 +8,7 @@
         class="stage-content"
         :class="{
           'content-blur-out': transitionState === 'to-blank',
-          'content-at-blank': transitionState === 'at-blank',
+          'content-at-blank': transitionState === 'at-blank' || transitionState === 'curtain-initial',
           'content-reveal': transitionState === 'to-target',
           'sub-page-fade-out': transitionState === 'sub-fade-out',
           'sub-page-wait': transitionState === 'sub-wait',
@@ -26,6 +26,7 @@
         class="stage-blank"
         :class="{
           'curtain-enter': transitionState === 'to-blank',
+          'curtain-initial': transitionState === 'curtain-initial',
           'curtain-hold': transitionState === 'at-blank',
           'curtain-fade-out': transitionState === 'to-target'
         }"
@@ -55,7 +56,7 @@ import Navbar from './components/Navbar.vue';
 import { transitionState, isTransitioning } from './services/pageTransition';
 
 const isCurtainVisible = computed(() =>
-  ['to-blank', 'at-blank', 'to-target'].includes(transitionState.value)
+  ['to-blank', 'at-blank', 'curtain-initial', 'to-target'].includes(transitionState.value)
 );
 </script>
 
@@ -183,7 +184,20 @@ const isCurtainVisible = computed(() =>
   justify-content: center;
 }
 
-/* 阶段一（后半段 220~650ms）：待当前画面模糊铺垫后，平缓切入幕布 */
+/* 阶段一（初次进入/刷新专属）：幕布开屏即完全呈现，字迹快速优雅升起 */
+.stage-blank.curtain-initial {
+  opacity: 1;
+}
+
+.stage-blank.curtain-initial .type-line {
+  animation: lineRise 380ms cubic-bezier(0.16, 1, 0.3, 1) 60ms forwards;
+}
+
+.stage-blank.curtain-initial .line-2 {
+  animation-delay: 140ms;
+}
+
+/* 阶段一（常规切换 220~650ms）：待当前画面模糊铺垫后，平缓切入幕布 */
 .stage-blank.curtain-enter {
   opacity: 0;
   animation: curtainFadeIn 430ms cubic-bezier(0.22, 1, 0.36, 1) 220ms forwards;
