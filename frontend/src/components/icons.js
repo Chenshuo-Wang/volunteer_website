@@ -32,4 +32,5 @@ export { default as UserPlus } from 'lucide-vue-next/dist/esm/icons/user-plus.js
 export { default as History } from 'lucide-vue-next/dist/esm/icons/history.js';
 export { default as ArrowRight } from 'lucide-vue-next/dist/esm/icons/arrow-right.js';
 export { default as ArrowLeft } from 'lucide-vue-next/dist/esm/icons/arrow-left.js';
+export { default as ArrowUpRight } from 'lucide-vue-next/dist/esm/icons/arrow-up-right.js';
 export { default as Eye } from 'lucide-vue-next/dist/esm/icons/eye.js';

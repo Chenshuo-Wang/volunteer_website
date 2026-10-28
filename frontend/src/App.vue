@@ -45,8 +45,18 @@
       </div>
     </div>
   </div>
-  <footer class="footer">
-    <p>© 2026 校园志愿者服务平台 | 让爱心点亮校园</p>
+  <footer class="swiss-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-mark">ANSHEN VOLUNTEER<span class="brand-dot">.</span></span>
+        <span class="footer-sub">CAMPUS CIVIC DISPATCH &amp; ARCHIVE</span>
+      </div>
+      <div class="footer-meta">
+        <span>EDITION // 2026</span>
+        <span class="meta-sep">/</span>
+        <span>校园志愿者服务平台</span>
+      </div>
+    </div>
   </footer>
 </template>
 
@@ -63,7 +73,7 @@ const isCurtainVisible = computed(() =>
 <style scoped>
 .main-content {
   flex: 1;
-  padding: 20px 0;
+  padding: 0;
   width: 100%;
   max-width: 100vw;
   box-sizing: border-box;
@@ -80,8 +90,8 @@ const isCurtainVisible = computed(() =>
   position: relative;
   width: 100%;
   max-width: 100vw;
-  min-height: calc(100vh - 170px);
-  min-height: calc(100dvh - 170px);
+  min-height: calc(100vh - 150px);
+  min-height: calc(100dvh - 150px);
   overflow-x: hidden;
   overflow-y: visible;
   box-sizing: border-box;
@@ -295,22 +305,62 @@ const isCurtainVisible = computed(() =>
   }
 }
 
-.footer {
-  text-align: center;
-  padding: 20px;
+/* 瑞士排印版权栏页脚 */
+.swiss-footer {
+  border-top: var(--hairline);
+  margin-top: 64px;
+  padding: 28px 0;
+  background-color: var(--bg-color);
+}
+
+.footer-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 48px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.footer-mark {
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--c-dark);
+}
+
+.footer-sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--text-subtle);
+}
+
+.footer-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-top: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meta-sep {
+  color: var(--text-subtle);
 }
 
 /* 手机移动端全面适配 */
 @media (max-width: 768px) {
-  .main-content {
-    padding: 12px 0;
-    width: 100%;
-    overflow-x: hidden;
-  }
-
   .route-slider-viewport {
     width: 100%;
     max-width: 100vw;
@@ -325,10 +375,15 @@ const isCurtainVisible = computed(() =>
     min-height: calc(100dvh - 130px);
   }
 
-  .footer {
-    padding: 16px 10px;
-    margin-top: 20px;
-    font-size: 0.82rem;
+  .swiss-footer {
+    margin-top: 40px;
+    padding: 22px 0;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 </style>

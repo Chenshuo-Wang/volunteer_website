@@ -1,6 +1,7 @@
 <template>
-  <span class="status-badge" :class="statusClass">
-    {{ status }}
+  <span class="swiss-status-badge" :class="statusClass">
+    <span class="status-dot" aria-hidden="true"></span>
+    <span class="status-text">{{ status }}</span>
   </span>
 </template>
 
@@ -27,21 +28,66 @@ const statusClass = computed(() => {
 </script>
 
 <style scoped>
-.status-badge {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 2px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
+.swiss-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
-  box-shadow: 1.5px 1.5px 0px #012030;
+  border: 1px solid rgba(1, 32, 48, 0.14);
+  background: var(--surface-white);
+  color: var(--c-dark);
+  line-height: 1.4;
 }
 
-.status-recruiting { background-color: #DAFDBA; color: #012030; border: 1.5px solid #012030; }
-.status-active { background-color: #45C4B0; color: #012030; border: 1.5px solid #012030; }
-.status-full { background-color: #9AEBA3; color: #012030; border: 1.5px solid #012030; }
-.status-closed { background-color: rgba(1, 32, 48, 0.08); color: #012030; border: 1.5px solid #012030; }
-.status-finished { background-color: rgba(1, 32, 48, 0.08); color: #13678A; border: 1.5px solid #13678A; }
-.status-default { background-color: rgba(1, 32, 48, 0.08); color: #13678A; border: 1.5px solid #13678A; }
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--text-subtle);
+  flex-shrink: 0;
+}
+
+.status-recruiting {
+  border-color: rgba(69, 196, 176, 0.45);
+  background: rgba(69, 196, 176, 0.08);
+  color: var(--c-dark);
+}
+
+.status-recruiting .status-dot {
+  background-color: var(--c-teal);
+}
+
+.status-active {
+  background: var(--c-dark);
+  color: #FFFFFF;
+  border-color: var(--c-dark);
+}
+
+.status-active .status-dot {
+  background-color: var(--c-teal);
+}
+
+.status-full {
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+}
+
+.status-full .status-dot {
+  background-color: var(--c-dark);
+}
+
+.status-closed,
+.status-finished,
+.status-default {
+  background: transparent;
+  color: var(--text-subtle);
+  border-color: rgba(1, 32, 48, 0.1);
+}
+
+.status-closed .status-dot,
+.status-finished .status-dot {
+  background-color: var(--text-subtle);
+}
 </style>

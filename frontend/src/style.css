@@ -1,35 +1,36 @@
 :root {
-  /* 核心五色调色盘 (Strict 5-Color System) */
-  --c-dark: #012030;      /* 深夜青蓝 / 结构实线、硬阴影、主文字 */
-  --c-ocean: #13678A;     /* 沉稳海蓝 / 品牌主色、二级结构、次级边线 */
-  --c-teal: #45C4B0;      /* 活力薄荷青 / 主交互高亮、聚焦点 */
-  --c-mint: #9AEBA3;      /* 柔和草绿 / 二级焦点、标签底色 */
-  --c-lime: #DAFDBA;      /* 极浅青柠 / 背景过渡、面板底衬 */
+  /* 瑞士新国际排印风调色盘 (Swiss High-End Editorial System) */
+  --c-dark: #012030;           /* 深墨青黑 / 主排印色、核心结构线 */
+  --c-ink: #012030;
+  --c-ocean: #13678A;          /* 克制深海蓝 / 次级强调 */
+  --c-teal: #45C4B0;           /* 标志性薄荷青 / 唯一高亮点缀色 (呼应 VOLUNTEER.) */
+  --c-mint: #9AEBA3;
+  --c-lime: #F0F4F3;
 
   /* 语义化色彩映射 */
-  --primary-color: #13678A;
-  --primary-hover: #012030;
+  --bg-color: #F7F8F9;         /* 冷瓷画册纸底色 (与幕布严丝合缝) */
+  --surface-white: #FFFFFF;    /* 纯白展陈面 */
+  --surface-subtle: #F0F2F4;   /* 浅灰信息底衬 */
+  --text-main: #012030;        /* 主标题与正文色 */
+  --text-muted: #5A6B75;       /* 中性冷灰次级文本 */
+  --text-subtle: #8C9AA3;      /* 索引号、时间戳与辅助标签 */
   --accent-color: #45C4B0;
-  --secondary-color: #9AEBA3;
-  --surface-tint: #DAFDBA;
 
-  /* 文字层级 */
-  --text-main: #012030;
-  --text-muted: #13678A;
-  --text-color: #012030;
-  --text-secondary: #13678A;
+  /* 瑞士网格发丝线与边框系统 */
+  --hairline: 1px solid rgba(1, 32, 48, 0.12);
+  --hairline-strong: 1px solid rgba(1, 32, 48, 0.24);
+  --rule-heavy: 1.5px solid #012030;
+  --card-radius: 0px;
+  --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* 全局背景底色 (纯色) */
-  --bg-color: #f8f9fa;
+  /* 字体栈 */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
 
-  /* 硬朗现代结构尺寸与投影 */
-  --card-radius: 2px;
-  --hard-border: 2px solid #012030;
-  --hard-border-ocean: 2px solid #13678A;
-  --hard-shadow: 4px 4px 0px #012030;
-  --hard-shadow-sm: 2px 2px 0px #012030;
-  --hard-shadow-lg: 6px 6px 0px #012030;
-  --transition-speed: 0.15s;
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 html, body {
@@ -39,10 +40,12 @@ html, body {
   max-width: 100vw;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--bg-color);
   min-height: 100vh;
   min-height: 100dvh;
@@ -60,75 +63,175 @@ body {
   overflow-x: hidden;
 }
 
-/* 硬朗实体卡片工具类 */
-.glass-panel {
-  background: #ffffff;
-  border: 2px solid var(--c-dark);
-  border-radius: var(--card-radius);
-  box-shadow: var(--hard-shadow);
-  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+/* 瑞士画册容器 */
+.container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 36px clamp(20px, 4vw, 48px);
 }
 
-/* 坚实机械感主按钮 */
-.btn-primary {
-  background: var(--c-teal);
+/* 摒弃旧版粗黑框与硬阴影，升级为极简发丝线展板 */
+.glass-panel {
+  background: var(--surface-white);
+  border: var(--hairline);
+  border-radius: 0;
+  box-shadow: none;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+/* 通用瑞士版头组件样式 */
+.editorial-header {
+  border-top: var(--rule-heavy);
+  border-bottom: var(--hairline);
+  padding: 28px 0 32px;
+  margin-bottom: 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.editorial-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editorial-kicker::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: var(--c-teal);
+}
+
+.editorial-title {
+  font-size: clamp(2.1rem, 4.2vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
   color: var(--c-dark);
-  border: 2px solid var(--c-dark);
-  padding: 10px 22px;
-  border-radius: var(--card-radius);
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.editorial-dot {
+  color: var(--c-teal);
+  margin-left: 2px;
+}
+
+.editorial-subtitle {
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+.editorial-meta-stat {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.editorial-meta-stat .stat-num {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--c-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.editorial-meta-stat .stat-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  margin-top: 6px;
+  display: block;
+}
+
+/* 瑞士排印风主按钮：深墨实心底 + 薄荷青微指示 */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--c-dark);
+  color: #FFFFFF;
+  border: 1px solid var(--c-dark);
+  padding: 12px 26px;
+  border-radius: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 3px 3px 0px var(--c-dark);
-  transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s;
+  box-shadow: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .btn-primary:hover:not(:disabled) {
-  transform: translate(-1px, -1px);
-  background: var(--c-mint);
-  box-shadow: 5px 5px 0px var(--c-dark);
+  background: var(--c-teal);
+  color: var(--c-dark);
+  border-color: var(--c-teal);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px var(--c-dark);
+  opacity: 0.9;
 }
 
-/* 坚实次级按钮 */
+.btn-primary:disabled {
+  background: var(--surface-subtle);
+  color: var(--text-subtle);
+  border-color: rgba(1, 32, 48, 0.1);
+  cursor: not-allowed;
+}
+
+/* 瑞士排印风次级线框按钮 */
 .btn-secondary {
-  background: var(--c-lime);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
   color: var(--c-dark);
-  border: 2px solid var(--c-dark);
-  padding: 10px 22px;
-  border-radius: var(--card-radius);
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  border: var(--hairline-strong);
+  padding: 11px 22px;
+  border-radius: 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  box-shadow: 3px 3px 0px var(--c-dark);
-  transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s;
+  box-shadow: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  transform: translate(-1px, -1px);
-  background: var(--c-teal);
-  box-shadow: 5px 5px 0px var(--c-dark);
+  background: var(--c-dark);
+  color: #FFFFFF;
+  border-color: var(--c-dark);
 }
 
-.btn-secondary:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px var(--c-dark);
+.btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-/* Layout */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-h1, h2, h3 {
+h1, h2, h3, h4 {
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   margin-top: 0;
   color: var(--c-dark);
 }
@@ -138,37 +241,61 @@ a {
   color: inherit;
 }
 
-/* 硬朗表单控件 */
+/* 瑞士极简表单控件 */
 input, select, textarea {
   width: 100%;
-  padding: 12px;
-  border: 2px solid var(--c-dark);
-  border-radius: var(--card-radius);
-  font-size: 1rem;
+  padding: 12px 14px;
+  border: var(--hairline-strong);
+  border-radius: 0;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
   color: var(--c-dark);
   font-weight: 500;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  background: #ffffff;
+  background: var(--surface-white);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   box-sizing: border-box;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-subtle);
+  font-weight: 400;
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--c-dark);
-  box-shadow: 3px 3px 0px var(--c-teal);
+  box-shadow: inset 3px 0 0 var(--c-teal);
 }
 
 label {
   display: block;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  margin-bottom: 6px;
-  color: var(--c-dark);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: var(--text-muted);
 }
 
 /* 矢量图标通用对齐样式 */
 .icon-inline {
   display: inline-block;
-  vertical-align: -0.16em;
+  vertical-align: -0.15em;
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 18px;
+  }
+
+  .editorial-header {
+    padding: 20px 0 24px;
+    margin-bottom: 28px;
+    align-items: flex-start;
+  }
+
+  .editorial-meta-stat {
+    text-align: left;
+  }
 }

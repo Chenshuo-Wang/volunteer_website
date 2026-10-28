@@ -1,129 +1,132 @@
 <template>
-  <header class="floating-nav-wrapper" :class="{ 'is-navigating': isTransitioning }">
-    <div class="nav-squircle" :class="{ 'menu-open': isMobileMenuOpen, 'is-navigating': isTransitioning }">
-      <!-- 品牌标题（已移除所有Logo） -->
-      <div class="brand-container">
-        <router-link to="/" class="brand-link" @click="closeMobileMenu">
-          <span class="brand-title">VOLUNTEER</span>
-          <span class="brand-badge">Campus</span>
-        </router-link>
-      </div>
-
-      <!-- 桌面端纯文本导航链接 -->
-      <nav class="desktop-nav">
-        <router-link to="/events" class="nav-link">
-          <span>活动</span>
-        </router-link>
-        <router-link to="/shifts" class="nav-link">
-          <span>周常</span>
-        </router-link>
-        
-        <!-- 管理员入口 -->
-        <router-link 
-          v-if="store.user?.isAdmin" 
-          to="/admin" 
-          class="nav-link admin-nav-link"
-        >
-          <ShieldCheck :size="15" :stroke-width="2.3" class="admin-icon" />
-          <span>管理</span>
-        </router-link>
-      </nav>
-
-      <!-- 右侧纯文本操作区 -->
-      <div class="nav-actions">
-        <!-- 桌面端用户账户信息：在竖屏/移动端下隐藏，只在展开菜单中显现 -->
-        <template v-if="store.user">
-          <router-link to="/profile" class="user-text-link" title="查看个人主页">
-            <div class="user-avatar">{{ store.user.name ? store.user.name.charAt(0) : 'U' }}</div>
-            <span class="user-name">{{ store.user.name }}</span>
-            <span v-if="store.user.isAdmin" class="user-admin-badge">Admin</span>
-          </router-link>
-        </template>
-        <template v-else>
-          <router-link to="/login" class="nav-link login-text-link">登录</router-link>
-        </template>
-
-        <!-- 手机端折叠按钮（无边框纯净图标） -->
-        <button 
-          class="mobile-toggle-btn" 
-          :class="{ 'is-open': isMobileMenuOpen }" 
-          @click="toggleMobileMenu"
-          aria-label="切换导航菜单"
-        >
-          <span class="bar bar-top"></span>
-          <span class="bar bar-bottom"></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- 手机端悬浮毛玻璃折叠面板 -->
-    <transition name="mobile-card-slide">
-      <div v-if="isMobileMenuOpen" class="mobile-dropdown-card" :class="{ 'is-navigating': isTransitioning }">
-        <div class="mobile-nav-section">
-          <router-link to="/events" class="mobile-nav-item" @click="closeMobileMenu">
-            <div class="mobile-item-left">
-              <Calendar :size="18" :stroke-width="2.2" class="mobile-icon" />
-              <span class="mobile-title">校园活动</span>
-            </div>
-            <ChevronRight :size="16" :stroke-width="2.2" class="chevron-svg" />
-          </router-link>
-
-          <router-link to="/shifts" class="mobile-nav-item" @click="closeMobileMenu">
-            <div class="mobile-item-left">
-              <CalendarClock :size="18" :stroke-width="2.2" class="mobile-icon" />
-              <span class="mobile-title">周常岗位值日</span>
-            </div>
-            <ChevronRight :size="16" :stroke-width="2.2" class="chevron-svg" />
-          </router-link>
-
-          <router-link 
-            v-if="store.user?.isAdmin" 
-            to="/admin" 
-            class="mobile-nav-item admin-item" 
-            @click="closeMobileMenu"
-          >
-            <div class="mobile-item-left">
-              <ShieldCheck :size="18" :stroke-width="2.2" class="mobile-icon" />
-              <span class="mobile-title">管理员后台</span>
-            </div>
-            <ChevronRight :size="16" :stroke-width="2.2" class="chevron-svg" />
+  <header class="swiss-nav-header" :class="{ 'is-navigating': isTransitioning }">
+    <div class="swiss-nav-bar" :class="{ 'menu-open': isMobileMenuOpen, 'is-navigating': isTransitioning }">
+      <div class="swiss-nav-inner">
+        <!-- 左侧：瑞士排印品牌标识（与幕布完全呼应） -->
+        <div class="brand-cell">
+          <router-link to="/" class="brand-link" @click="closeMobileMenu">
+            <span class="brand-wordmark">ANSHEN VOLUNTEER<span class="brand-dot">.</span></span>
+            <span class="brand-edition">CAMPUS // 26</span>
           </router-link>
         </div>
 
-        <div class="mobile-action-section">
-          <!-- 竖屏移动端下：用户账户在此处专属显现 -->
+        <!-- 中部：带索引编号的桌面端瑞士网格导航 -->
+        <nav class="desktop-nav" aria-label="主导航">
+          <router-link to="/events" class="nav-item">
+            <span class="nav-index">01</span>
+            <span class="nav-label">活动</span>
+          </router-link>
+          <router-link to="/shifts" class="nav-item">
+            <span class="nav-index">02</span>
+            <span class="nav-label">周常</span>
+          </router-link>
+          <router-link
+            v-if="store.user?.isAdmin"
+            to="/admin"
+            class="nav-item admin-nav-item"
+          >
+            <span class="nav-index">03</span>
+            <span class="nav-label">管理</span>
+          </router-link>
+        </nav>
+
+        <!-- 右侧：身份档案入口与移动端开关 -->
+        <div class="action-cell">
           <template v-if="store.user">
-            <router-link to="/profile" class="mobile-profile-card" @click="closeMobileMenu">
-              <div class="user-avatar-lg">{{ store.user.name ? store.user.name.charAt(0) : 'U' }}</div>
-              <div class="mobile-user-details">
-                <div class="mobile-user-name">{{ store.user.name }}</div>
-                <div class="mobile-user-role">{{ store.user.isAdmin ? '系统管理员' : '志愿者学生' }} · 点击进入个人中心</div>
-              </div>
-              <ChevronRight :size="16" :stroke-width="2.2" class="chevron-svg" />
+            <router-link to="/profile" class="user-dossier-link" title="进入志愿者个人档案">
+              <span class="user-initial">{{ store.user.name ? store.user.name.charAt(0) : 'U' }}</span>
+              <span class="user-name">{{ store.user.name }}</span>
+              <span v-if="store.user.isAdmin" class="user-role-tag">ADMIN</span>
             </router-link>
           </template>
           <template v-else>
-            <div class="mobile-auth-single">
-              <router-link to="/login" class="mobile-login-pure-link" @click="closeMobileMenu">登录账号</router-link>
+            <router-link to="/login" class="login-entry-link">
+              <span class="login-prefix">PORTAL //</span>
+              <span>登录</span>
+            </router-link>
+          </template>
+
+          <button
+            class="mobile-toggle-btn"
+            :class="{ 'is-open': isMobileMenuOpen }"
+            @click="toggleMobileMenu"
+            aria-label="切换导航菜单"
+          >
+            <span class="bar bar-top"></span>
+            <span class="bar bar-bottom"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 移动端：瑞士网格抽屉面板 -->
+    <transition name="swiss-drawer-slide">
+      <div v-if="isMobileMenuOpen" class="mobile-drawer" :class="{ 'is-navigating': isTransitioning }">
+        <div class="mobile-nav-list">
+          <router-link to="/events" class="mobile-row" @click="closeMobileMenu">
+            <div class="mobile-row-left">
+              <span class="mobile-idx">01 // DISPATCH</span>
+              <span class="mobile-title">校园志愿活动</span>
             </div>
+            <ChevronRight :size="16" :stroke-width="2" class="chevron-svg" />
+          </router-link>
+
+          <router-link to="/shifts" class="mobile-row" @click="closeMobileMenu">
+            <div class="mobile-row-left">
+              <span class="mobile-idx">02 // ROTATION</span>
+              <span class="mobile-title">周常岗位值日</span>
+            </div>
+            <ChevronRight :size="16" :stroke-width="2" class="chevron-svg" />
+          </router-link>
+
+          <router-link
+            v-if="store.user?.isAdmin"
+            to="/admin"
+            class="mobile-row"
+            @click="closeMobileMenu"
+          >
+            <div class="mobile-row-left">
+              <span class="mobile-idx">03 // CONSOLE</span>
+              <span class="mobile-title">管理员系统后台</span>
+            </div>
+            <ChevronRight :size="16" :stroke-width="2" class="chevron-svg" />
+          </router-link>
+        </div>
+
+        <div class="mobile-account-zone">
+          <template v-if="store.user">
+            <router-link to="/profile" class="mobile-user-row" @click="closeMobileMenu">
+              <div class="mobile-user-left">
+                <div class="mobile-avatar-sq">{{ store.user.name ? store.user.name.charAt(0) : 'U' }}</div>
+                <div class="mobile-user-meta">
+                  <div class="mobile-user-name">{{ store.user.name }}</div>
+                  <div class="mobile-user-sub">{{ store.user.isAdmin ? 'SYSTEM ADMIN · 查看档案' : 'VOLUNTEER · 查看个人档案' }}</div>
+                </div>
+              </div>
+              <ChevronRight :size="16" :stroke-width="2" class="chevron-svg" />
+            </router-link>
+          </template>
+          <template v-else>
+            <router-link to="/login" class="mobile-login-btn" @click="closeMobileMenu">
+              <span>ACCESS PORTAL // 立即登录</span>
+            </router-link>
           </template>
         </div>
       </div>
     </transition>
   </header>
 
-  <!-- 占位垫高层：确保固定位置导航栏不被滚动影响，且不遮挡文档流起始内容 -->
+  <!-- 顶部导航高度占位 -->
   <div class="nav-fixed-placeholder" aria-hidden="true"></div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
 import { store } from '../store';
-import { useRouter, useRoute } from 'vue-router';
-import { ShieldCheck, Calendar, CalendarClock, ChevronRight } from './icons';
+import { useRoute } from 'vue-router';
+import { ChevronRight } from './icons';
 import { isTransitioning } from '../services/pageTransition';
 
-const router = useRouter();
 const route = useRoute();
 const isMobileMenuOpen = ref(false);
 
@@ -135,227 +138,242 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
 
-// 路由切换时自动关闭手机端展开菜单
 watch(() => route.fullPath, () => {
   isMobileMenuOpen.value = false;
 });
 </script>
 
 <style scoped>
-/* 悬浮固定包裹层：采用 position: fixed 保持绝对固定位置，滚动屏幕时完全保持原地不动 */
-.floating-nav-wrapper {
+.swiss-nav-header {
   position: fixed;
-  top: 14px;
+  top: 0;
   left: 0;
   right: 0;
   width: 100%;
   z-index: 100;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 16px;
-  box-sizing: border-box;
-  pointer-events: none; /* 让外层透明间隙不遮挡下层页面交互 */
 }
 
-/* 占位垫高层：在文档流中占据等同导航栏的高度，避免固定导航栏遮挡页面首屏内容 */
 .nav-fixed-placeholder {
   width: 100%;
-  height: 74px;
-  pointer-events: none;
+  height: 64px;
   flex-shrink: 0;
 }
 
-/* 核心连续曲率圆角矩形导航栏 (Squircle) */
-.nav-squircle {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 1020px; /* 适度舒展的黄金比例宽度 */
-  height: 56px;
-  padding: 0 24px;
-  border-radius: 16px; /* 连续曲率平滑圆角 */
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border: 1px solid rgba(1, 32, 48, 0.08);
-  box-shadow: 
-    0 10px 30px -4px rgba(1, 32, 48, 0.06),
-    0 2px 8px -2px rgba(1, 32, 48, 0.03);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
-}
-
-/* 过渡动画期间彻底禁用导航栏交互，物理拦截连击 */
-.floating-nav-wrapper.is-navigating,
-.nav-squircle.is-navigating,
-.mobile-dropdown-card.is-navigating {
+/* 过渡期间彻底锁定导航栏交互 */
+.swiss-nav-header.is-navigating,
+.swiss-nav-bar.is-navigating,
+.mobile-drawer.is-navigating {
   pointer-events: none !important;
   cursor: default !important;
   user-select: none !important;
 }
 
-/* 品牌纯文本标题区（无 Logo） */
-.brand-container {
+.swiss-nav-bar {
+  width: 100%;
+  height: 64px;
+  background: rgba(247, 248, 249, 0.9);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: var(--hairline);
+}
+
+.swiss-nav-inner {
+  max-width: 1180px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 左侧品牌区 */
+.brand-cell {
   display: flex;
   align-items: center;
 }
 
 .brand-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
   text-decoration: none;
   user-select: none;
-  transition: opacity 0.15s ease;
 }
 
-.brand-link:hover {
-  opacity: 0.82;
-}
-
-.brand-title {
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #012030;
-}
-
-.brand-badge {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.brand-wordmark {
+  font-size: 0.98rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--c-dark);
   text-transform: uppercase;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: rgba(19, 103, 138, 0.08);
-  color: #13678A;
 }
 
-/* 桌面端纯文本导航链接：去除边框与背景，保持合理呼吸距离 */
+.brand-dot {
+  color: var(--c-teal);
+  margin-left: 1px;
+}
+
+.brand-edition {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-subtle);
+}
+
+/* 中部桌面导航 */
 .desktop-nav {
   display: flex;
-  align-items: center;
-  gap: 28px; /* 舒展通透的间距 */
+  align-items: stretch;
+  height: 100%;
+  gap: 36px;
 }
 
-.nav-link {
-  font-size: 0.9rem; /* 14.4px 黄金文字大小 */
-  font-weight: 500;
-  color: #525866;
-  text-decoration: none;
-  padding: 6px 4px;
-  border: none;
-  background: transparent;
+.nav-item {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  transition: color 0.15s ease;
+  gap: 6px;
+  height: 100%;
   position: relative;
+  text-decoration: none;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
 }
 
-.nav-link:hover {
-  color: #012030;
-}
-
-/* 激活状态：文字加深加粗，底部配合微指示点 */
-.nav-link.router-link-active {
-  color: #012030;
+.nav-index {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  transition: color var(--transition-fast);
 }
 
-.nav-link.router-link-active::after {
+.nav-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.nav-item:hover {
+  color: var(--c-dark);
+}
+
+.nav-item:hover .nav-index {
+  color: var(--c-teal);
+}
+
+.nav-item.router-link-active {
+  color: var(--c-dark);
+}
+
+.nav-item.router-link-active .nav-index {
+  color: var(--c-dark);
+  font-weight: 700;
+}
+
+.nav-item.router-link-active .nav-label {
+  font-weight: 800;
+}
+
+.nav-item.router-link-active::after {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
+  bottom: -1px;
+  left: 0;
+  right: 0;
   height: 2px;
-  background-color: #012030;
-  border-radius: 1px;
+  background-color: var(--c-teal);
 }
 
-.admin-icon {
-  width: 15px;
-  height: 15px;
-  color: #13678A;
-}
-
-/* 右侧纯文本操作区 */
-.nav-actions {
+/* 右侧用户与登录入口 */
+.action-cell {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-/* 桌面端用户状态纯文本项（去边框） */
-.user-text-link {
-  display: flex;
+.user-dossier-link {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 6px 0;
   text-decoration: none;
-  border: none;
-  background: transparent;
-  padding: 4px 2px;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--transition-fast);
 }
 
-.user-text-link:hover {
-  opacity: 0.85;
+.user-dossier-link:hover {
+  opacity: 0.75;
 }
 
-.user-avatar {
+.user-initial {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
-  background: #13678A;
-  color: #ffffff;
-  font-size: 11px;
+  background: var(--c-dark);
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 700;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  text-transform: uppercase;
 }
 
 .user-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #012030;
-  max-width: 100px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--c-dark);
+  max-width: 110px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.user-admin-badge {
-  font-size: 9px;
+.user-role-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: #DAFDBA;
-  color: #012030;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  background: var(--surface-subtle);
+  border: var(--hairline);
+  color: var(--c-dark);
 }
 
-/* 登录纯文本链接（去边框） */
-.login-text-link {
-  font-size: 0.9rem;
+.login-entry-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--c-dark);
+  padding: 6px 12px;
+  border: var(--hairline-strong);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.login-prefix {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-subtle);
   font-weight: 500;
-  color: #525866;
 }
 
-.login-text-link:hover {
-  color: #012030;
+.login-entry-link:hover {
+  background: var(--c-dark);
+  color: #FFFFFF;
 }
 
-/* 手机端折叠按钮（去边框） */
+.login-entry-link:hover .login-prefix {
+  color: var(--c-teal);
+}
+
+/* 手机端折叠按钮 */
 .mobile-toggle-btn {
   display: none;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   padding: 6px;
   background: transparent;
   border: none;
@@ -363,199 +381,154 @@ watch(() => route.fullPath, () => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .bar {
-  width: 18px;
+  width: 20px;
   height: 1.5px;
-  background-color: #012030;
-  border-radius: 2px;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  background-color: var(--c-dark);
+  transition: transform 0.2s ease;
 }
 
 .mobile-toggle-btn.is-open .bar-top {
-  transform: translateY(2.75px) rotate(45deg);
+  transform: translateY(3.25px) rotate(45deg);
 }
 
 .mobile-toggle-btn.is-open .bar-bottom {
-  transform: translateY(-2.75px) rotate(-45deg);
+  transform: translateY(-3.25px) rotate(-45deg);
 }
 
-/* 手机端折叠卡片（与外层连续曲率一致） */
-.mobile-dropdown-card {
-  pointer-events: auto;
+/* 手机端瑞士抽屉面板 */
+.mobile-drawer {
   width: 100%;
-  max-width: 1020px;
-  margin-top: 8px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
-  border: 1px solid rgba(1, 32, 48, 0.08);
-  box-shadow: 
-    0 16px 40px -6px rgba(1, 32, 48, 0.1),
-    0 0 0 1px rgba(1, 32, 48, 0.04);
-  padding: 14px 16px 16px;
-  box-sizing: border-box;
+  background: var(--surface-white);
+  border-bottom: var(--rule-heavy);
 }
 
-.mobile-nav-section {
+.mobile-nav-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
-.mobile-nav-item {
+.mobile-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 12px;
-  border-radius: 10px;
+  padding: 16px 20px;
+  border-bottom: var(--hairline);
   text-decoration: none;
-  color: #012030;
-  border: none;
-  background: transparent;
-  transition: background-color 0.15s ease;
+  color: var(--c-dark);
+  transition: background-color var(--transition-fast);
 }
 
-.mobile-nav-item:hover,
-.mobile-nav-item.router-link-active {
-  background: rgba(1, 32, 48, 0.04);
+.mobile-row.router-link-active {
+  background: var(--surface-subtle);
+  border-left: 3px solid var(--c-teal);
 }
 
-.mobile-item-left {
+.mobile-row-left {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.mobile-icon {
-  font-size: 1.05rem;
+.mobile-idx {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--text-subtle);
 }
 
 .mobile-title {
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--c-dark);
 }
 
 .chevron-svg {
-  width: 16px;
-  height: 16px;
-  color: #8c93a0;
+  color: var(--text-subtle);
 }
 
-.mobile-action-section {
-  border-top: 1px solid rgba(1, 32, 48, 0.06);
-  margin-top: 8px;
-  padding-top: 12px;
+.mobile-account-zone {
+  padding: 16px 20px;
+  background: var(--bg-color);
 }
 
-/* 竖屏移动端专属：用户账户卡片 */
-.mobile-profile-card {
+.mobile-user-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
   text-decoration: none;
-  background: rgba(19, 103, 138, 0.04);
-  transition: background-color 0.15s ease;
 }
 
-.mobile-profile-card:hover {
-  background: rgba(19, 103, 138, 0.08);
+.mobile-user-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.user-avatar-lg {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #13678A;
-  color: #ffffff;
-  font-size: 13px;
+.mobile-avatar-sq {
+  width: 36px;
+  height: 36px;
+  background: var(--c-dark);
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-
-.mobile-user-details {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
 }
 
 .mobile-user-name {
   font-size: 0.92rem;
-  font-weight: 700;
-  color: #012030;
+  font-weight: 800;
+  color: var(--c-dark);
 }
 
-.mobile-user-role {
-  font-size: 0.76rem;
-  color: #13678A;
+.mobile-user-sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
 }
 
-.mobile-auth-single {
+.mobile-login-btn {
   display: flex;
   justify-content: center;
-  padding: 6px 0;
+  align-items: center;
+  width: 100%;
+  padding: 12px;
+  background: var(--c-dark);
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
-.mobile-login-pure-link {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: #012030;
-  text-decoration: none;
-  padding: 8px 16px;
-}
-
-/* 下拉菜单动画 */
-.mobile-card-slide-enter-active,
-.mobile-card-slide-leave-active {
+.swiss-drawer-slide-enter-active,
+.swiss-drawer-slide-leave-active {
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.mobile-card-slide-enter-from,
-.mobile-card-slide-leave-to {
+.swiss-drawer-slide-enter-from,
+.swiss-drawer-slide-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px);
 }
 
-/* 竖屏及移动端断点适配 */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1024px) {
-  .floating-nav-wrapper {
-    top: 10px;
-    padding: 0 12px;
-  }
-
+  .swiss-nav-bar,
   .nav-fixed-placeholder {
-    height: 64px;
+    height: 56px;
   }
 
-  .nav-squircle {
-    height: 50px;
-    padding: 0 16px;
-    border-radius: 14px;
-  }
-
-  .desktop-nav {
-    display: none;
-  }
-
-  .brand-badge {
-    display: none;
-  }
-
-  /* 核心需求：在竖屏/移动端下完全隐藏主栏上的用户账户与登录入口，仅在展开菜单中显示 */
-  .user-text-link {
-    display: none !important;
-  }
-
-  .login-text-link {
+  .desktop-nav,
+  .brand-edition,
+  .user-dossier-link,
+  .login-entry-link {
     display: none !important;
   }
 

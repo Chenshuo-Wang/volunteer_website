@@ -1,74 +1,110 @@
 <template>
   <div class="container detail-container" v-if="event">
-    <div class="glass-panel detail-card">
-      <div class="header-section">
-        <StatusBadge :status="event.status" />
-        <h1 class="title">{{ event.title }}</h1>
-        <div class="meta-row">
-          <span><MapPin :size="16" :stroke-width="2.3" class="icon-inline" /> {{ event.location }}</span>
-          <span><Clock :size="16" :stroke-width="2.3" class="icon-inline" /> {{ event.hoursValue }} 志愿工时</span>
-          <span><Users :size="16" :stroke-width="2.3" class="icon-inline" /> {{ event.currentVolunteers }} / {{ event.requiredVolunteers }} 已报名</span>
+    <div class="back-bar">
+      <router-link to="/events" class="back-link">
+        <ArrowLeft :size="15" :stroke-width="2" class="icon-inline" />
+        <span>RETURN TO INDEX // 返回活动列表</span>
+      </router-link>
+    </div>
+
+    <article class="swiss-dossier">
+      <!-- 顶部档案标题区 -->
+      <header class="dossier-header">
+        <div class="dossier-meta-top">
+          <span class="dossier-id">EVENT DOSSIER // #{{ String(event.id).padStart(3, '0') }}</span>
+          <StatusBadge :status="event.status" />
+        </div>
+        <h1 class="dossier-title">{{ event.title }}<span class="editorial-dot">.</span></h1>
+      </header>
+
+      <!-- 核心指标三栏网格 -->
+      <div class="metrics-strip">
+        <div class="metric-cell">
+          <span class="metric-key">LOCATION // 活动地点</span>
+          <span class="metric-val">{{ event.location }}</span>
+        </div>
+        <div class="metric-cell">
+          <span class="metric-key">CREDIT // 志愿工时</span>
+          <span class="metric-val tabular">+{{ event.hoursValue }} 小时</span>
+        </div>
+        <div class="metric-cell">
+          <span class="metric-key">CAPACITY // 招募进度</span>
+          <span class="metric-val tabular">{{ event.currentVolunteers }} / {{ event.requiredVolunteers }} 人</span>
         </div>
       </div>
 
-      <div class="content-section">
-        <h3>活动详情</h3>
-        <p class="description">{{ event.description || '暂无详细描述' }}</p>
-        
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="label">开始时间</span>
-            <span class="value">{{ formatFullDate(event.startTime) }}</span>
+      <!-- 双栏正文与规格参数表 -->
+      <div class="dossier-body-grid">
+        <section class="dossier-briefing">
+          <div class="section-index">01 // BRIEFING 活动说明</div>
+          <p class="description">{{ event.description || '暂无详细文字说明。请按下方规格参数中的时间与地点准时参与。' }}</p>
+        </section>
+
+        <section class="dossier-specs">
+          <div class="section-index">02 // SPECIFICATIONS 规格参数</div>
+          <div class="spec-table">
+            <div class="spec-item">
+              <span class="spec-label">开始时间</span>
+              <span class="spec-value tabular">{{ formatFullDate(event.startTime) }}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">结束时间</span>
+              <span class="spec-value tabular">{{ formatFullDate(event.endTime) }}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">报名截止</span>
+              <span class="spec-value tabular">{{ formatFullDate(event.registrationDeadline) }}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">项目负责人</span>
+              <span class="spec-value">{{ event.leaderName || '未指定' }} {{ event.leaderContact ? `(${event.leaderContact})` : '' }}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">年级限制</span>
+              <span class="spec-value">{{ event.gradeLimit === 'ALL' ? '面向全校' : event.gradeLimit + ' 级' }}</span>
+            </div>
           </div>
-          <div class="info-item">
-            <span class="label">结束时间</span>
-            <span class="value">{{ formatFullDate(event.endTime) }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">报名截止</span>
-            <span class="value">{{ formatFullDate(event.registrationDeadline) }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">负责人</span>
-            <span class="value">{{ event.leaderName || '未指定' }} ({{ event.leaderContact || '无联系方式' }})</span>
-          </div>
-          <div class="info-item">
-            <span class="label">年级限制</span>
-            <span class="value">{{ event.gradeLimit === 'ALL' ? '全校' : event.gradeLimit + '级' }}</span>
-          </div>
-        </div>
+        </section>
       </div>
 
-      <!-- 管理员专属快捷操作 -->
-      <div v-if="store.user?.isAdmin" class="admin-quick-actions">
-        <span class="admin-tip"><ShieldCheck :size="17" :stroke-width="2.3" class="icon-inline" /> 管理员快捷权限：</span>
-        <router-link 
-          :to="{ path: '/admin', query: { tab: '活动管理', editId: event.id } }" 
-          class="btn-admin-edit"
+      <!-- 管理员快捷入口 -->
+      <div v-if="store.user?.isAdmin" class="admin-strip">
+        <span class="admin-strip-label">
+          <ShieldCheck :size="15" :stroke-width="2" class="icon-inline" />
+          ADMINISTRATION // 管理员快捷操作
+        </span>
+        <router-link
+          :to="{ path: '/admin', query: { tab: '活动管理', editId: event.id } }"
+          class="btn-secondary btn-compact"
         >
-          <Pencil :size="15" :stroke-width="2.3" class="icon-inline" /> 编辑修改此活动
+          <Pencil :size="14" :stroke-width="2" class="icon-inline" /> 编辑此活动参数
         </router-link>
       </div>
 
-      <div class="action-section">
-        <button 
-          v-if="store.user" 
-          @click="handleSignup" 
-          class="btn-primary" 
-          :disabled="!canSignup || loading"
-          :class="{ 'btn-secondary': !canSignup }"
-        >
-          {{ loading ? '处理中...' : signupButtonText }}
-        </button>
-        <div v-else class="login-prompt">
-          <p>请先登录后报名</p>
-          <router-link to="/login" class="btn-primary">去登录</router-link>
+      <!-- 底部报名动作栏 -->
+      <footer class="dossier-footer">
+        <div class="footer-note">
+          <span class="note-mono">REGISTRATION PROTOCOL // 报名确认后请准时签到参与</span>
         </div>
-      </div>
-    </div>
+        <div class="footer-cta">
+          <button
+            v-if="store.user"
+            @click="handleSignup"
+            class="btn-primary btn-register-action"
+            :disabled="!canSignup || loading"
+          >
+            {{ loading ? 'PROCESSING // 处理中...' : signupButtonText }}
+          </button>
+          <div v-else class="login-inline">
+            <span class="login-hint">需登录志愿者账号后报名</span>
+            <router-link to="/login" class="btn-primary">PORTAL // 前往登录</router-link>
+          </div>
+        </div>
+      </footer>
+    </article>
   </div>
-  <div v-else class="loading-state">
-    加载中...
+  <div v-else class="container">
+    <div class="swiss-loading">LOADING DOSSIER // 正在读取活动档案...</div>
   </div>
 </template>
 
@@ -78,7 +114,7 @@ import { useRoute, useRouter } from 'vue-router';
 import apiClient from '../services/api';
 import { store } from '../store';
 import StatusBadge from '../components/StatusBadge.vue';
-import { MapPin, Clock, Users, ShieldCheck, Pencil } from '../components/icons';
+import { ShieldCheck, Pencil, ArrowLeft } from '../components/icons';
 
 const route = useRoute();
 const router = useRouter();
@@ -103,8 +139,8 @@ const canSignup = computed(() => {
 
 const signupButtonText = computed(() => {
   if (!event.value) return '';
-  if (event.value.status === '招募中') return '立即报名';
-  return event.value.status;
+  if (event.value.status === '招募中') return 'CONFIRM SIGNUP // 立即报名参与';
+  return `STATUS // ${event.value.status}`;
 });
 
 const formatFullDate = (iso) => {
@@ -116,14 +152,13 @@ const formatFullDate = (iso) => {
 
 const handleSignup = async () => {
   if (!confirm('确定要报名参加这个活动吗？')) return;
-  
+
   loading.value = true;
   try {
     await apiClient.post(`/events/${eventId}/signup`, {
       studentId: store.user.id
     });
     alert('报名成功！');
-    // Reload to update status
     const response = await apiClient.get(`/events/${eventId}`);
     event.value = response.data;
   } catch (error) {
@@ -136,144 +171,281 @@ const handleSignup = async () => {
 
 <style scoped>
 .detail-container {
-  max-width: 800px;
+  max-width: 980px;
 }
 
-.detail-card {
-  padding: 40px;
-  background: #ffffff;
-  border: 2px solid #012030;
-  border-radius: 2px;
-  box-shadow: 6px 6px 0px #012030;
-}
-
-.header-section {
-  text-align: center;
-  border-bottom: 2px solid #012030;
-  padding-bottom: 24px;
+.back-bar {
   margin-bottom: 24px;
 }
 
-.title {
-  margin: 16px 0;
-  font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: #012030;
-}
-
-.meta-row {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  color: #13678A;
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 600;
-  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
 }
 
-.content-section {
-  margin-bottom: 32px;
+.back-link:hover {
+  color: var(--c-dark);
 }
 
-.content-section h3 {
+.swiss-dossier {
+  background: var(--surface-white);
+  border-top: var(--rule-heavy);
+  border-left: var(--hairline);
+  border-right: var(--hairline);
+  border-bottom: var(--hairline);
+}
+
+.dossier-header {
+  padding: 36px 40px 32px;
+  border-bottom: var(--hairline);
+}
+
+.dossier-meta-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dossier-id {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-subtle);
+}
+
+.dossier-title {
+  font-size: clamp(1.85rem, 3.5vw, 2.75rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  color: var(--c-dark);
+  margin: 0;
+}
+
+/* 三栏核心指标带 */
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: var(--hairline);
+  background: var(--bg-color);
+}
+
+.metric-cell {
+  padding: 20px 40px;
+  border-right: var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metric-cell:last-child {
+  border-right: none;
+}
+
+.metric-key {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-subtle);
+}
+
+.metric-val {
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  color: var(--c-dark);
+}
+
+/* 双栏正文与规格表 */
+.dossier-body-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  border-bottom: var(--hairline);
+}
+
+.dossier-briefing {
+  padding: 36px 40px;
+  border-right: var(--hairline);
+}
+
+.dossier-specs {
+  padding: 36px 40px;
+}
+
+.section-index {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: var(--hairline);
 }
 
 .description {
   white-space: pre-wrap;
-  line-height: 1.8;
-  color: #012030;
-  font-weight: 500;
-  margin-bottom: 24px;
+  line-height: 1.85;
+  color: var(--c-dark);
+  font-size: 0.98rem;
+  margin: 0;
 }
 
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  background: #DAFDBA;
-  border: 2px solid #012030;
-  box-shadow: 3px 3px 0px #012030;
-  padding: 20px;
-  border-radius: 2px;
-}
-
-.info-item {
+.spec-table {
   display: flex;
   flex-direction: column;
 }
 
-.label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #13678A;
-  margin-bottom: 4px;
-}
-
-.value {
-  color: #012030;
-  font-weight: 800;
-}
-
-.action-section {
+.spec-item {
   display: flex;
-  justify-content: center;
-  margin-top: 32px;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: var(--hairline);
+  gap: 16px;
 }
 
-.action-section button {
-  padding: 14px 48px;
-  font-size: 1.1rem;
+.spec-item:last-child {
+  border-bottom: none;
 }
 
-.login-prompt {
-  text-align: center;
+.spec-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
-.login-prompt p {
-  color: #13678A;
-  margin-bottom: 12px;
+.spec-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--c-dark);
+  text-align: right;
 }
 
-/* 管理员快捷操作入口 */
-.admin-quick-actions {
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 管理员快捷栏 */
+.admin-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 40px;
+  background: var(--surface-subtle);
+  border-bottom: var(--hairline);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-strip-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--c-dark);
+}
+
+.btn-compact {
+  padding: 7px 14px;
+  font-size: 0.8rem;
+}
+
+/* 底部报名区 */
+.dossier-footer {
+  padding: 28px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.note-mono {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  color: var(--text-subtle);
+}
+
+.btn-register-action {
+  min-width: 240px;
+  padding: 15px 32px;
+}
+
+.login-inline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #f8fbfb;
-  border: 2px solid #012030;
-  box-shadow: 3px 3px 0px #012030;
-  border-radius: 2px;
-  padding: 12px 18px;
-  margin-top: 24px;
+  gap: 16px;
   flex-wrap: wrap;
-  gap: 12px;
 }
 
-.admin-tip {
-  font-weight: 800;
-  color: #012030;
-  font-size: 0.95rem;
+.login-hint {
+  font-size: 0.88rem;
+  color: var(--text-muted);
 }
 
-.btn-admin-edit {
-  background: #DAFDBA;
-  color: #012030;
-  border: 2px solid #012030;
-  padding: 8px 18px;
-  font-weight: 800;
-  border-radius: 2px;
-  text-decoration: none;
-  box-shadow: 2px 2px 0px #012030;
-  display: inline-block;
-  transition: all 0.15s;
+.swiss-loading {
+  padding: 72px 24px;
+  text-align: center;
+  border: var(--hairline);
+  background: var(--surface-white);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
-.btn-admin-edit:hover {
-  background: #45C4B0;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px #012030;
+@media (max-width: 768px) {
+  .dossier-header,
+  .dossier-briefing,
+  .dossier-specs,
+  .admin-strip,
+  .dossier-footer {
+    padding: 24px 20px;
+  }
+
+  .metrics-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-cell {
+    padding: 16px 20px;
+    border-right: none;
+    border-bottom: var(--hairline);
+  }
+
+  .metric-cell:last-child {
+    border-bottom: none;
+  }
+
+  .dossier-body-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dossier-briefing {
+    border-right: none;
+    border-bottom: var(--hairline);
+  }
+
+  .btn-register-action {
+    width: 100%;
+  }
+
+  .footer-cta {
+    width: 100%;
+  }
 }
 </style>

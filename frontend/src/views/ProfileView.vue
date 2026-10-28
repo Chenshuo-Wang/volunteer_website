@@ -1,91 +1,127 @@
 <template>
   <div class="container">
-    <div v-if="profile" class="profile-layout">
-      <!-- Left: User Info -->
-      <div class="glass-panel profile-card">
-        <div class="avatar-placeholder">{{ profile.name[0] }}</div>
-        <h2>{{ profile.name }}</h2>
-        <p class="class-info">{{ profile.fullClassName }}</p>
-        
-        <div class="stats-box">
-          <div class="stat-value">{{ profile.totalHours }}</div>
-          <div class="stat-label">累计志愿时长 (小时)</div>
+    <div v-if="profile">
+      <header class="editorial-header">
+        <div class="header-main">
+          <div class="editorial-kicker">INDEX // 03 — VOLUNTEER DOSSIER</div>
+          <h1 class="editorial-title">{{ profile.name }}<span class="editorial-dot">.</span></h1>
+          <p class="editorial-subtitle">{{ profile.fullClassName }} · 个人志愿服务档案与工时认证台账</p>
         </div>
-
-        <div class="contact-info">
-          <div class="info-row"><Smartphone :size="16" :stroke-width="2.3" class="icon-inline" /> {{ profile.phone }}</div>
-          <div v-if="profile.qq" class="info-row"><MessageSquare :size="16" :stroke-width="2.3" class="icon-inline" /> QQ: {{ profile.qq }}</div>
-          <div v-if="profile.wechat" class="info-row"><MessageCircle :size="16" :stroke-width="2.3" class="icon-inline" /> 微信: {{ profile.wechat }}</div>
+        <div class="editorial-meta-stat">
+          <span class="stat-num">{{ profile.totalHours }}<small class="unit-hrs">h</small></span>
+          <span class="stat-label">VERIFIED HOURS // 累计认证工时</span>
         </div>
+      </header>
 
-        <button @click="handleLogout" class="btn-logout-profile" title="退出当前登录账号">
-          <LogOut :size="17" :stroke-width="2.4" class="logout-icon" />
-          退出登录
-        </button>
-      </div>
-
-      <!-- Middle: Password Change -->
-      <div class="glass-panel password-card">
-        <h3>修改密码</h3>
-        <form @submit.prevent="handlePasswordChange" class="password-form">
-          <div class="form-group">
-            <label>旧密码</label>
-            <input v-model="passwordForm.oldPassword" type="password" required />
-          </div>
-          <div class="form-group">
-            <label>新密码</label>
-            <input v-model="passwordForm.newPassword" type="password" required minlength="6" />
-          </div>
-          <div class="form-group">
-            <label>确认新密码</label>
-            <input v-model="passwordForm.confirmPassword" type="password" required />
-          </div>
-          <div v-if="passwordError" class="error-msg">{{ passwordError }}</div>
-          <div v-if="passwordSuccess" class="success-msg">{{ passwordSuccess }}</div>
-          <button type="submit" class="btn-primary" :disabled="passwordLoading">
-            {{ passwordLoading ? '修改中...' : '确认修改' }}
-          </button>
-        </form>
-      </div>
-
-      <!-- Right: History -->
-      <div class="glass-panel history-card">
-        <h3>志愿履历</h3>
-        <div v-if="profile.history && profile.history.length > 0" class="history-list">
-          <div 
-            v-for="(item, index) in profile.history" 
-            :key="index" 
-            class="history-item"
-          >
-            <div class="history-left">
-              <span class="history-date">{{ formatDate(item.date) }}</span>
-              <span class="history-title">{{ item.title }}</span>
+      <div class="swiss-profile-grid">
+        <!-- 左侧栏：身份信息 + 密码修改 -->
+        <div class="profile-side-col">
+          <section class="swiss-panel">
+            <div class="panel-header">
+              <span class="panel-index">01 // IDENTITY 联络档案</span>
             </div>
-            <div class="history-right">
-              <span class="hours-badge">+{{ item.hours }}h</span>
-              <span 
-                class="status-text" 
-                :class="{
-                  'text-green': item.status === '已完成',
-                  'text-orange': item.status === '待确认',
-                  'text-red': item.status === '未完成',
-                  'text-gray': item.status === '已报名' || item.status === '已参加'
-                }"
-              >
-                {{ item.status }}
-              </span>
+            <div class="identity-body">
+              <div class="identity-top">
+                <div class="swiss-monogram">{{ profile.name[0] }}</div>
+                <div>
+                  <div class="identity-name">{{ profile.name }}</div>
+                  <div class="identity-class">{{ profile.fullClassName }}</div>
+                </div>
+              </div>
+
+              <div class="contact-specs">
+                <div class="contact-row">
+                  <span class="contact-key">PHONE</span>
+                  <span class="contact-val tabular">{{ profile.phone }}</span>
+                </div>
+                <div v-if="profile.qq" class="contact-row">
+                  <span class="contact-key">QQ</span>
+                  <span class="contact-val tabular">{{ profile.qq }}</span>
+                </div>
+                <div v-if="profile.wechat" class="contact-row">
+                  <span class="contact-key">WECHAT</span>
+                  <span class="contact-val">{{ profile.wechat }}</span>
+                </div>
+              </div>
+
+              <button @click="handleLogout" class="btn-secondary btn-logout-full" title="退出当前登录账号">
+                <LogOut :size="15" :stroke-width="2" class="icon-inline" />
+                <span>SIGN OUT // 退出当前账号</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="swiss-panel">
+            <div class="panel-header">
+              <span class="panel-index">02 // SECURITY 修改密码</span>
+            </div>
+            <form @submit.prevent="handlePasswordChange" class="password-form">
+              <div class="form-group">
+                <label>CURRENT PASSWORD // 旧密码</label>
+                <input v-model="passwordForm.oldPassword" type="password" required />
+              </div>
+              <div class="form-group">
+                <label>NEW PASSWORD // 新密码</label>
+                <input v-model="passwordForm.newPassword" type="password" required minlength="6" />
+              </div>
+              <div class="form-group">
+                <label>CONFIRM // 确认新密码</label>
+                <input v-model="passwordForm.confirmPassword" type="password" required />
+              </div>
+              <div v-if="passwordError" class="swiss-msg msg-error">{{ passwordError }}</div>
+              <div v-if="passwordSuccess" class="swiss-msg msg-success">{{ passwordSuccess }}</div>
+              <button type="submit" class="btn-primary w-full" :disabled="passwordLoading">
+                {{ passwordLoading ? 'UPDATING // 修改中...' : 'UPDATE PASSWORD // 确认修改' }}
+              </button>
+            </form>
+          </section>
+        </div>
+
+        <!-- 右侧主栏：志愿履历台账 -->
+        <section class="swiss-panel history-panel">
+          <div class="panel-header">
+            <span class="panel-index">03 // SERVICE ARCHIVE 志愿服务履历</span>
+            <span class="panel-count">{{ profile.history ? profile.history.length : 0 }} ENTRIES</span>
+          </div>
+
+          <div v-if="profile.history && profile.history.length > 0" class="archive-list">
+            <div
+              v-for="(item, index) in profile.history"
+              :key="index"
+              class="archive-row"
+            >
+              <div class="archive-idx">{{ String(index + 1).padStart(2, '0') }}</div>
+              <div class="archive-main">
+                <span class="archive-title">{{ item.title }}</span>
+                <span class="archive-date">{{ formatDate(item.date) }}</span>
+              </div>
+              <div class="archive-right">
+                <span class="archive-hours">+{{ item.hours }} HRS</span>
+                <span
+                  class="archive-status"
+                  :class="{
+                    'st-completed': item.status === '已完成',
+                    'st-pending': item.status === '待确认',
+                    'st-failed': item.status === '未完成',
+                    'st-registered': item.status === '已报名' || item.status === '已参加'
+                  }"
+                >
+                  {{ item.status }}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div v-else class="empty-history">
-          <p>暂无志愿记录，快去报名活动吧！</p>
-          <router-link to="/events" class="btn-primary btn-sm">去报名</router-link>
-        </div>
+
+          <div v-else class="empty-archive">
+            <p class="empty-mono">NO RECORDS FOUND // 暂无志愿服务记录</p>
+            <router-link to="/events" class="btn-primary">EXPLORE EVENTS // 前往报名活动</router-link>
+          </div>
+        </section>
       </div>
     </div>
-    
-    <div v-else class="loading-state">
-      加载用户信息中...
+
+    <div v-else class="swiss-loading">
+      LOADING DOSSIER // 正在读取志愿者档案...
     </div>
   </div>
 </template>
@@ -95,12 +131,11 @@ import { ref, onMounted } from 'vue';
 import apiClient from '../services/api';
 import { store } from '../store';
 import { useRouter } from 'vue-router';
-import { Smartphone, MessageSquare, MessageCircle, LogOut } from '../components/icons';
+import { LogOut } from '../components/icons';
 
 const router = useRouter();
 const profile = ref(null);
 
-// 密码修改相关
 const passwordForm = ref({
   oldPassword: '',
   newPassword: '',
@@ -115,13 +150,12 @@ onMounted(async () => {
     router.push('/login');
     return;
   }
-  
+
   try {
     const response = await apiClient.get('/students/profile', {
       params: { phone: store.user.phone }
     });
     profile.value = response.data;
-    // Update local store in case details changed
     store.updateUser(response.data);
   } catch (error) {
     console.error('Failed to load profile', error);
@@ -140,20 +174,19 @@ const handleLogout = () => {
 const handlePasswordChange = async () => {
   passwordError.value = '';
   passwordSuccess.value = '';
-  
-  // 验证密码
+
   if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
     passwordError.value = '两次输入的新密码不一致';
     return;
   }
-  
+
   if (passwordForm.value.newPassword.length < 6) {
     passwordError.value = '密码长度至少6位';
     return;
   }
-  
+
   passwordLoading.value = true;
-  
+
   try {
     await apiClient.put('/students/profile', {
       oldPassword: passwordForm.value.oldPassword,
@@ -161,9 +194,8 @@ const handlePasswordChange = async () => {
     }, {
       params: { phone: store.user.phone }
     });
-    
-    passwordSuccess.value = '密码修改成功！';
-    // 重置表单
+
+    passwordSuccess.value = '密码修改成功';
     passwordForm.value = {
       oldPassword: '',
       newPassword: '',
@@ -179,260 +211,288 @@ const handlePasswordChange = async () => {
 </script>
 
 <style scoped>
-.profile-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr 2fr;
-  gap: 24px;
-}
-
-@media (max-width: 1024px) {
-  .profile-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-.profile-card {
-  padding: 40px 20px;
-  text-align: center;
-  height: fit-content;
-  background: #ffffff;
-  border: 2px solid #012030;
-  border-radius: 2px;
-  box-shadow: 4px 4px 0px #012030;
-}
-
-.avatar-placeholder {
-  width: 80px;
-  height: 80px;
-  background: #45C4B0;
-  color: #012030;
-  border-radius: 4px;
-  border: 2px solid #012030;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.2rem;
-  font-weight: 900;
-  margin: 0 auto 16px;
-  box-shadow: 3px 3px 0px #012030;
-}
-
-.class-info {
-  color: #13678A;
-  font-weight: 600;
-  margin-bottom: 24px;
-}
-
-.stats-box {
-  background: #DAFDBA;
-  border: 2px solid #012030;
-  box-shadow: 2px 2px 0px #012030;
-  padding: 16px;
-  border-radius: 2px;
-  margin-bottom: 24px;
-}
-
-.stat-value {
-  font-size: 2rem;
-  font-weight: 900;
-  color: #012030;
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  color: #13678A;
+.unit-hrs {
+  font-size: 1.1rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  color: var(--c-teal);
+  margin-left: 2px;
 }
 
-.contact-info {
-  text-align: left;
-  font-size: 0.9rem;
-  color: #012030;
-  font-weight: 600;
+.swiss-profile-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 32px;
+  align-items: start;
 }
 
-.info-row {
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.history-card {
-  padding: 30px;
-  background: #ffffff;
-  border: 2px solid #012030;
-  border-radius: 2px;
-  box-shadow: 4px 4px 0px #012030;
-}
-
-.history-card h3 {
-  font-weight: 800;
-}
-
-.history-list {
+.profile-side-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 28px;
 }
 
-.history-item {
+.swiss-panel {
+  background: var(--surface-white);
+  border-top: var(--rule-heavy);
+  border-left: var(--hairline);
+  border-right: var(--hairline);
+  border-bottom: var(--hairline);
+}
+
+.panel-header {
+  padding: 16px 24px;
+  border-bottom: var(--hairline);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  background: #ffffff;
-  border-radius: 2px;
-  border: 2px solid #012030;
-  border-left: 6px solid #45C4B0;
-  box-shadow: 3px 3px 0px #012030;
 }
 
-.history-left {
+.panel-index {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.panel-count {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-subtle);
+}
+
+.identity-body {
+  padding: 24px;
+}
+
+.identity-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: var(--hairline);
+  margin-bottom: 18px;
+}
+
+.swiss-monogram {
+  width: 52px;
+  height: 52px;
+  background: var(--c-dark);
+  color: #FFFFFF;
+  font-size: 1.4rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.identity-name {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--c-dark);
+}
+
+.identity-class {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.contact-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.contact-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.86rem;
+}
+
+.contact-key {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-subtle);
+}
+
+.contact-val {
+  font-weight: 700;
+  color: var(--c-dark);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-logout-full {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.btn-logout-full:hover {
+  background: #991B1B !important;
+  border-color: #991B1B !important;
+  color: #FFFFFF !important;
+}
+
+.password-form {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.swiss-msg {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border-left: 3px solid var(--c-dark);
+  background: var(--surface-subtle);
+}
+
+.msg-error {
+  border-left-color: #DC2626;
+  color: #991B1B;
+}
+
+.msg-success {
+  border-left-color: var(--c-teal);
+  color: var(--c-dark);
+}
+
+/* 右侧履历列表 */
+.archive-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.archive-row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: var(--hairline);
+  transition: background-color var(--transition-fast);
+}
+
+.archive-row:last-child {
+  border-bottom: none;
+}
+
+.archive-row:hover {
+  background: #FCFCFD;
+}
+
+.archive-idx {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-subtle);
+}
+
+.archive-main {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.history-date {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #13678A;
+.archive-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--c-dark);
 }
 
-.history-title {
-  font-weight: 700;
-  color: #012030;
+.archive-date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
-.history-right {
-  text-align: right;
+.archive-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
 }
 
-.hours-badge {
+.archive-hours {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
   font-weight: 800;
-  color: #13678A;
+  color: var(--c-dark);
+  font-variant-numeric: tabular-nums;
 }
 
-.status-text {
-  font-size: 0.8rem;
+.archive-status {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border: var(--hairline);
 }
-.text-green { color: #13678A; font-weight: 700; }
-.text-orange { color: #e17055; font-weight: 700; }
-.text-red { color: #d63031; font-weight: 700; }
-.text-gray { color: #012030; font-weight: 500; opacity: 0.6; }
 
-.empty-history {
+.st-completed {
+  background: rgba(69, 196, 176, 0.12);
+  border-color: rgba(69, 196, 176, 0.5);
+  color: var(--c-dark);
+}
+
+.st-pending {
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+}
+
+.st-failed {
+  color: #991B1B;
+  border-color: rgba(153, 27, 27, 0.25);
+}
+
+.st-registered {
+  color: var(--text-subtle);
+}
+
+.empty-archive {
+  padding: 72px 24px;
   text-align: center;
-  padding: 40px;
-  color: #13678A;
-  font-weight: 600;
 }
 
-.password-card {
-  padding: 30px;
-  background: #ffffff;
-  border: 2px solid #012030;
-  border-radius: 2px;
-  box-shadow: 4px 4px 0px #012030;
+.empty-mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 20px;
 }
 
-.password-card h3 {
-  font-weight: 800;
+.swiss-loading {
+  padding: 72px 24px;
+  text-align: center;
+  border: var(--hairline);
+  background: var(--surface-white);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
-.password-form .form-group {
-  margin-bottom: 16px;
-}
-
-.password-form label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 700;
-  color: #012030;
-}
-
-.password-form input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 2px solid #012030;
-  border-radius: 2px;
-  color: #012030;
-  font-weight: 600;
-  box-sizing: border-box;
-}
-
-.password-form input:focus {
-  border-color: #012030;
-  box-shadow: 3px 3px 0px #45C4B0;
-  outline: none;
-}
-
-.error-msg {
-  color: #012030;
-  background: rgba(1, 32, 48, 0.08);
-  border: 2px solid #012030;
-  box-shadow: 2px 2px 0px #012030;
-  padding: 8px;
-  border-radius: 2px;
-  margin-bottom: 12px;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.success-msg {
-  color: #012030;
-  background: #DAFDBA;
-  border: 2px solid #012030;
-  box-shadow: 2px 2px 0px #012030;
-  padding: 8px;
-  border-radius: 2px;
-  margin-bottom: 12px;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.btn-logout-profile {
-  width: 100%;
-  margin-top: 24px;
-  padding: 10px 16px;
-  background: #ffffff;
-  color: #012030;
-  border: 2px solid #012030;
-  border-radius: 2px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  font-size: 0.95rem;
-  cursor: pointer;
-  box-shadow: 3px 3px 0px #012030;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-sizing: border-box;
-  transition: all 0.15s ease;
-}
-
-.btn-logout-profile .logout-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.btn-logout-profile:hover {
-  background: #ffe3e3;
-  color: #d63031;
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px #012030;
-}
-
-.btn-logout-profile:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px #012030;
+@media (max-width: 960px) {
+  .swiss-profile-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
