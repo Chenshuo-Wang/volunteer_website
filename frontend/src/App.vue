@@ -214,6 +214,11 @@ const isCurtainVisible = computed(() =>
   animation: curtainFadeOut 450ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+.stage-blank.curtain-fade-out .type-line {
+  transform: translate3d(0, 0, 0);
+  animation: none;
+}
+
 @keyframes curtainFadeIn {
   from {
     opacity: 0;

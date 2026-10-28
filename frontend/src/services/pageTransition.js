@@ -1,5 +1,18 @@
 import { ref, nextTick } from 'vue';
 
+// 一级页面幕布动画时长配置
+const ENTER_CURTAIN_DURATION = 650; // 阶段一总时长：当前画面先延时模糊 (0~380ms) + 幕布切入 (220~650ms)
+const FADE_OUT_DURATION = 450;      // 阶段三总时长：幕布平缓淡出到新画面 (ms)
+const MIN_CURTAIN_HOLD = 380;       // 常规幕布优雅驻留视觉确认时间 (ms)
+const INITIAL_CURTAIN_HOLD = 580;   // 首次进入/刷新幕布驻留时间，确保两行品牌字完全升起 (ms)
+
+// 二级页面淡入淡出动画时长配置
+const SUB_FADE_OUT_DURATION = 200;  // 二级页面淡出时长 (ms)
+const SUB_FADE_IN_DURATION = 260;   // 二级页面淡入时长 (ms)
+
+const MAX_LOAD_WAIT = 8000;         // 极端网络异常下的最大安全等待上限 (ms)
+const SAFETY_AUTO_RESET = 4500;     // 极端路由异常下的自动重置保护 (ms)
+
 function getInitialState() {
   if (typeof window === 'undefined') return 'idle';
   const path = window.location.pathname.split('?')[0].split('#')[0];
@@ -28,18 +41,6 @@ let safetyTimer = null;
 if (initialTransitionState === 'curtain-initial') {
   armSafetyTimer();
 }
-
-// 一级页面幕布动画时长配置
-const ENTER_CURTAIN_DURATION = 650; // 阶段一总时长：当前画面先延时模糊 (0~380ms) + 幕布切入 (220~650ms)
-const FADE_OUT_DURATION = 450;      // 阶段三总时长：幕布平缓淡出到新画面 (ms)
-const MIN_CURTAIN_HOLD = 380;       // 幕布优雅驻留视觉确认时间 (ms)
-
-// 二级页面淡入淡出动画时长配置
-const SUB_FADE_OUT_DURATION = 200;  // 二级页面淡出时长 (ms)
-const SUB_FADE_IN_DURATION = 260;   // 二级页面淡入时长 (ms)
-
-const MAX_LOAD_WAIT = 8000;         // 极端网络异常下的最大安全等待上限 (ms)
-const SAFETY_AUTO_RESET = 4500;     // 极端路由异常下的自动重置保护 (ms)
 
 // 追踪当前正在进行中的 API 请求数量
 let activeRequests = 0;
@@ -188,7 +189,8 @@ export async function finishSlideToTarget() {
   }
 
   // 一级页面幕布模式
-  await waitForPageReady(MIN_CURTAIN_HOLD);
+  const holdMs = transitionState.value === 'curtain-initial' ? INITIAL_CURTAIN_HOLD : MIN_CURTAIN_HOLD;
+  await waitForPageReady(holdMs);
   if (sessionId !== currentSessionId) return;
   transitionState.value = 'to-target';
   await wait(FADE_OUT_DURATION);
